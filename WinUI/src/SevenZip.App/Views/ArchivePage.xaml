@@ -21,6 +21,8 @@
         <KeyboardAccelerator Key="F5" Invoked="OnRefreshAccelerator" />
         <KeyboardAccelerator Key="C" Modifiers="Control" Invoked="OnCopyAccelerator" />
         <KeyboardAccelerator Key="V" Modifiers="Control" Invoked="OnPasteAccelerator" />
+        <KeyboardAccelerator Key="F6" Invoked="OnNextPaneAccelerator" />
+        <KeyboardAccelerator Key="F6" Modifiers="Shift" Invoked="OnPreviousPaneAccelerator" />
     </UserControl.KeyboardAccelerators>
 
     <Grid Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="0,1,0,0">
@@ -39,11 +41,12 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <CommandBar
+                x:Name="Toolbar"
                 HorizontalAlignment="Left"
                 Background="Transparent"
                 DefaultLabelPosition="Right"
                 IsEnabled="{x:Bind local:Converters.Not(ViewModel.IsLoading), Mode=OneWay}">
-                <AppBarButton Label="Extract" ToolTipService.ToolTip="Extract (Ctrl+E)">
+                <AppBarButton AccessKey="E" AutomationProperties.AcceleratorKey="Ctrl+E" Label="Extract" ToolTipService.ToolTip="Extract (Ctrl+E)">
                     <AppBarButton.Icon>
                         <FontIcon Glyph="&#xE8B7;" />
                     </AppBarButton.Icon>
@@ -61,7 +64,7 @@
                         </MenuFlyout>
                     </AppBarButton.Flyout>
                 </AppBarButton>
-                <AppBarButton Label="Add" IsEnabled="{x:Bind ViewModel.CanModify, Mode=OneWay}">
+                <AppBarButton AccessKey="A" Label="Add" IsEnabled="{x:Bind ViewModel.CanModify, Mode=OneWay}">
                     <AppBarButton.Icon>
                         <FontIcon Glyph="&#xE710;" />
                     </AppBarButton.Icon>
@@ -84,20 +87,20 @@
                     </AppBarButton.Flyout>
                 </AppBarButton>
                 <AppBarSeparator />
-                <AppBarButton x:Name="RenameButton" Click="OnRenameClick" IsEnabled="False" Label="Rename" ToolTipService.ToolTip="Rename (F2)">
+                <AppBarButton x:Name="RenameButton" AccessKey="M" AutomationProperties.AcceleratorKey="F2" Click="OnRenameClick" IsEnabled="False" Label="Rename" ToolTipService.ToolTip="Rename (F2)">
                     <AppBarButton.Icon><FontIcon Glyph="&#xE8AC;" /></AppBarButton.Icon>
                 </AppBarButton>
-                <AppBarButton x:Name="DeleteButton" Click="OnDeleteClick" IsEnabled="False" Label="Delete" ToolTipService.ToolTip="Delete (Del)">
+                <AppBarButton x:Name="DeleteButton" AccessKey="D" AutomationProperties.AcceleratorKey="Delete" Click="OnDeleteClick" IsEnabled="False" Label="Delete" ToolTipService.ToolTip="Delete (Del)">
                     <AppBarButton.Icon><FontIcon Glyph="&#xE74D;" /></AppBarButton.Icon>
                 </AppBarButton>
-                <AppBarButton Click="OnShareClick" Label="Share" ToolTipService.ToolTip="Share with the Windows Share sheet">
+                <AppBarButton AccessKey="S" Click="OnShareClick" Label="Share" ToolTipService.ToolTip="Share with the Windows Share sheet">
                     <AppBarButton.Icon><FontIcon Glyph="&#xE72D;" /></AppBarButton.Icon>
                 </AppBarButton>
-                <AppBarButton Click="OnTestClick" Label="Test" ToolTipService.ToolTip="Check the archive for errors">
+                <AppBarButton AccessKey="T" Click="OnTestClick" Label="Test" ToolTipService.ToolTip="Check the archive for errors">
                     <AppBarButton.Icon><FontIcon Glyph="&#xE9D5;" /></AppBarButton.Icon>
                 </AppBarButton>
                 <AppBarSeparator />
-                <AppBarToggleButton x:Name="DetailsToggle" Click="OnDetailsToggleClick" Label="Details" ToolTipService.ToolTip="Details pane (Alt+Enter)">
+                <AppBarToggleButton x:Name="DetailsToggle" AccessKey="P" Click="OnDetailsToggleClick" Label="Details" ToolTipService.ToolTip="Details pane (Alt+Enter)">
                     <AppBarToggleButton.Icon><FontIcon Glyph="&#xE89F;" /></AppBarToggleButton.Icon>
                     <AppBarToggleButton.KeyboardAccelerators>
                         <KeyboardAccelerator Key="Enter" Modifiers="Menu" />
@@ -127,26 +130,30 @@
                 Grid.Column="1"
                 Width="260"
                 VerticalAlignment="Center"
+                AutomationProperties.LandmarkType="Search"
+                AutomationProperties.Name="Search this archive"
                 PlaceholderText="Search this archive"
                 QueryIcon="Find"
                 Text="{x:Bind ViewModel.SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
         </Grid>
 
         <!-- Navigation -->
-        <Grid Grid.Row="1" Padding="12,2,12,6" ColumnSpacing="4">
+        <Grid Grid.Row="1" Padding="12,0,12,8" ColumnSpacing="4" AutomationProperties.LandmarkType="Navigation" AutomationProperties.Name="Location">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
             <Button
                 Style="{StaticResource SubtleButtonStyle}"
+                AutomationProperties.AcceleratorKey="Alt+Up"
                 AutomationProperties.Name="Up one level"
                 Click="OnUpClick"
                 IsEnabled="{x:Bind ViewModel.CanGoUp, Mode=OneWay}"
                 ToolTipService.ToolTip="Up (Alt+Up)">
-                <FontIcon FontSize="14" Glyph="&#xE74A;" />
+                <FontIcon FontSize="16" Glyph="&#xE74A;" />
             </Button>
             <BreadcrumbBar
+                x:Name="Breadcrumbs"
                 Grid.Column="1"
                 Margin="4,0,0,0"
                 VerticalAlignment="Center"
@@ -191,7 +198,7 @@
                 <ColumnDefinition x:Name="DetailsColumn" Width="300" />
             </Grid.ColumnDefinitions>
 
-            <Grid Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="{StaticResource OverlayCornerRadius}">
+            <Grid Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="{StaticResource OverlayCornerRadius}" AutomationProperties.LandmarkType="Main" AutomationProperties.Name="Archive contents">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
@@ -206,31 +213,31 @@
                         <ColumnDefinition Width="{Binding SizeWidth, Source={StaticResource Columns}}" />
                         <ColumnDefinition Width="{Binding PackedWidth, Source={StaticResource Columns}}" />
                     </Grid.ColumnDefinitions>
-                    <Button Style="{StaticResource ColumnHeaderButtonStyle}" Click="OnSortClick" Tag="Name">
+                    <Button Style="{StaticResource ColumnHeaderButtonStyle}" AutomationProperties.Name="{x:Bind local:Converters.SortLabel(ViewModel.Sort, 'Name', 'Name', ViewModel.SortDescending), Mode=OneWay}" Click="OnSortClick" Tag="Name">
                         <StackPanel Orientation="Horizontal" Spacing="6">
                             <TextBlock Text="Name" />
                             <FontIcon FontSize="10" Glyph="{x:Bind local:Converters.SortGlyph(ViewModel.Sort, 'Name', ViewModel.SortDescending), Mode=OneWay}" />
                         </StackPanel>
                     </Button>
-                    <Button Grid.Column="1" Style="{StaticResource ColumnHeaderButtonStyle}" Click="OnSortClick" Tag="Modified">
+                    <Button Grid.Column="1" Style="{StaticResource ColumnHeaderButtonStyle}" AutomationProperties.Name="{x:Bind local:Converters.SortLabel(ViewModel.Sort, 'Modified', 'Date modified', ViewModel.SortDescending), Mode=OneWay}" Click="OnSortClick" Tag="Modified">
                         <StackPanel Orientation="Horizontal" Spacing="6">
                             <TextBlock Text="Date modified" />
                             <FontIcon FontSize="10" Glyph="{x:Bind local:Converters.SortGlyph(ViewModel.Sort, 'Modified', ViewModel.SortDescending), Mode=OneWay}" />
                         </StackPanel>
                     </Button>
-                    <Button Grid.Column="2" Style="{StaticResource ColumnHeaderButtonStyle}" Click="OnSortClick" Tag="Type">
+                    <Button Grid.Column="2" Style="{StaticResource ColumnHeaderButtonStyle}" AutomationProperties.Name="{x:Bind local:Converters.SortLabel(ViewModel.Sort, 'Type', 'Type', ViewModel.SortDescending), Mode=OneWay}" Click="OnSortClick" Tag="Type">
                         <StackPanel Orientation="Horizontal" Spacing="6">
                             <TextBlock Text="Type" />
                             <FontIcon FontSize="10" Glyph="{x:Bind local:Converters.SortGlyph(ViewModel.Sort, 'Type', ViewModel.SortDescending), Mode=OneWay}" />
                         </StackPanel>
                     </Button>
-                    <Button Grid.Column="3" Style="{StaticResource ColumnHeaderButtonStyle}" Click="OnSortClick" Tag="Size">
+                    <Button Grid.Column="3" Style="{StaticResource ColumnHeaderButtonStyle}" AutomationProperties.Name="{x:Bind local:Converters.SortLabel(ViewModel.Sort, 'Size', 'Size', ViewModel.SortDescending), Mode=OneWay}" Click="OnSortClick" Tag="Size">
                         <StackPanel Orientation="Horizontal" Spacing="6">
                             <TextBlock Text="Size" />
                             <FontIcon FontSize="10" Glyph="{x:Bind local:Converters.SortGlyph(ViewModel.Sort, 'Size', ViewModel.SortDescending), Mode=OneWay}" />
                         </StackPanel>
                     </Button>
-                    <Button Grid.Column="4" Style="{StaticResource ColumnHeaderButtonStyle}" Click="OnSortClick" Tag="Packed">
+                    <Button Grid.Column="4" Style="{StaticResource ColumnHeaderButtonStyle}" AutomationProperties.Name="{x:Bind local:Converters.SortLabel(ViewModel.Sort, 'Packed', 'Packed', ViewModel.SortDescending), Mode=OneWay}" Click="OnSortClick" Tag="Packed">
                         <StackPanel Orientation="Horizontal" Spacing="6">
                             <TextBlock Text="Packed" />
                             <FontIcon FontSize="10" Glyph="{x:Bind local:Converters.SortGlyph(ViewModel.Sort, 'Packed', ViewModel.SortDescending), Mode=OneWay}" />
@@ -259,7 +266,7 @@
                     </ListView.ItemContainerStyle>
                     <ListView.ContextFlyout>
                         <MenuFlyout x:Name="ItemMenu" Opening="OnItemMenuOpening">
-                            <MenuFlyoutItem x:Name="MenuOpen" Click="OnMenuOpenClick" Text="Open" FontWeight="SemiBold">
+                            <MenuFlyoutItem x:Name="MenuOpen" Click="OnMenuOpenClick" Text="Open" FontWeight="SemiBold" KeyboardAcceleratorTextOverride="Enter">
                                 <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8E5;" /></MenuFlyoutItem.Icon>
                             </MenuFlyoutItem>
                             <MenuFlyoutItem x:Name="MenuOpenWith" Click="OnMenuOpenWithClick" Text="Open with…">
@@ -272,21 +279,21 @@
                             <MenuFlyoutItem Click="OnExtractClick" Text="Extract to…">
                                 <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8B7;" /></MenuFlyoutItem.Icon>
                             </MenuFlyoutItem>
-                            <MenuFlyoutItem Click="OnMenuCopyClick" Text="Copy">
+                            <MenuFlyoutItem Click="OnMenuCopyClick" Text="Copy" KeyboardAcceleratorTextOverride="Ctrl+C">
                                 <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8C8;" /></MenuFlyoutItem.Icon>
                             </MenuFlyoutItem>
                             <MenuFlyoutItem Click="OnShareClick" Text="Share">
                                 <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE72D;" /></MenuFlyoutItem.Icon>
                             </MenuFlyoutItem>
                             <MenuFlyoutSeparator />
-                            <MenuFlyoutItem x:Name="MenuRename" Click="OnRenameClick" Text="Rename">
+                            <MenuFlyoutItem x:Name="MenuRename" Click="OnRenameClick" Text="Rename" KeyboardAcceleratorTextOverride="F2">
                                 <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8AC;" /></MenuFlyoutItem.Icon>
                             </MenuFlyoutItem>
-                            <MenuFlyoutItem x:Name="MenuDelete" Click="OnDeleteClick" Text="Delete">
+                            <MenuFlyoutItem x:Name="MenuDelete" Click="OnDeleteClick" Text="Delete" KeyboardAcceleratorTextOverride="Del">
                                 <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE74D;" /></MenuFlyoutItem.Icon>
                             </MenuFlyoutItem>
                             <MenuFlyoutSeparator />
-                            <MenuFlyoutItem Click="OnMenuPropertiesClick" Text="Properties">
+                            <MenuFlyoutItem Click="OnMenuPropertiesClick" Text="Properties" KeyboardAcceleratorTextOverride="Alt+Enter">
                                 <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE946;" /></MenuFlyoutItem.Icon>
                             </MenuFlyoutItem>
                         </MenuFlyout>
@@ -315,13 +322,13 @@
                                     </Grid>
                                     <StackPanel VerticalAlignment="Center">
                                         <TextBlock Text="{x:Bind Name}" TextTrimming="CharacterEllipsis" />
-                                        <TextBlock Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorTertiaryBrush}" Text="{x:Bind Location}" Visibility="{x:Bind local:Converters.VisibleIfNotEmpty(Location)}" />
+                                        <TextBlock Style="{ThemeResource ListCaptionTextStyle}" Text="{x:Bind Location}" Visibility="{x:Bind local:Converters.VisibleIfNotEmpty(Location)}" />
                                     </StackPanel>
                                 </StackPanel>
-                                <TextBlock Grid.Column="1" Style="{StaticResource CellTextStyle}" Text="{x:Bind ModifiedText}" />
-                                <TextBlock Grid.Column="2" Style="{StaticResource CellTextStyle}" Text="{x:Bind TypeName}" />
-                                <TextBlock Grid.Column="3" Style="{StaticResource CellTextStyle}" HorizontalTextAlignment="Right" Text="{x:Bind SizeText}" />
-                                <TextBlock Grid.Column="4" Style="{StaticResource CellTextStyle}" HorizontalTextAlignment="Right" Text="{x:Bind PackedText}" ToolTipService.ToolTip="{x:Bind RatioText}" />
+                                <TextBlock Grid.Column="1" Style="{ThemeResource CellTextStyle}" Text="{x:Bind ModifiedText}" />
+                                <TextBlock Grid.Column="2" Style="{ThemeResource CellTextStyle}" Text="{x:Bind TypeName}" />
+                                <TextBlock Grid.Column="3" Style="{ThemeResource CellTextStyle}" HorizontalTextAlignment="Right" Text="{x:Bind SizeText}" />
+                                <TextBlock Grid.Column="4" Style="{ThemeResource CellTextStyle}" HorizontalTextAlignment="Right" Text="{x:Bind PackedText}" ToolTipService.ToolTip="{x:Bind RatioText}" />
                             </Grid>
                         </DataTemplate>
                     </ListView.ItemTemplate>
@@ -357,7 +364,7 @@
         </Grid>
 
         <!-- Status bar -->
-        <Grid Grid.Row="4" Padding="16,6" ColumnSpacing="16">
+        <Grid Grid.Row="4" Padding="16,8" ColumnSpacing="16">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />

@@ -8,11 +8,14 @@
     <Grid Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="0,1,0,0">
         <ScrollViewer>
             <StackPanel MaxWidth="{StaticResource PageMaxWidth}" Padding="{StaticResource PagePadding}" Spacing="{StaticResource SettingsCardSpacing}">
-                <TextBlock Margin="0,0,0,8" Style="{StaticResource TitleTextBlockStyle}" Text="Settings" />
+                <TextBlock Margin="0,0,0,8" Style="{StaticResource PageTitleStyle}" Text="Settings" />
 
                 <!-- Appearance -->
                 <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="Appearance" />
                 <tk:SettingsCard Header="App theme">
+                    <tk:SettingsCard.Description>
+                        <HyperlinkButton Padding="0" Content="Windows color settings" NavigateUri="ms-settings:colors" />
+                    </tk:SettingsCard.Description>
                     <tk:SettingsCard.HeaderIcon><FontIcon Glyph="&#xE790;" /></tk:SettingsCard.HeaderIcon>
                     <ComboBox MinWidth="200" SelectedIndex="{x:Bind ThemeIndex, Mode=TwoWay}">
                         <ComboBoxItem Content="Use system setting" />

@@ -46,6 +46,13 @@ public sealed partial class OperationWindow : Window, IWindowHost
         Dialogs = new DialogService(() => Root.XamlRoot, DispatcherQueue, () => Hwnd);
         Operations = new OperationService(() => Hwnd, () => Win32.GetForegroundWindow() == Hwnd);
         Root.ActualThemeChanged += (_, _) => ThemeHelper.UpdateCaptionButtons(this);
+        // Title bar content fades when the window is inactive, matching the system caption buttons.
+        Activated += (_, e) =>
+        {
+            double opacity = e.WindowActivationState == WindowActivationState.Deactivated ? 0.5 : 1;
+            TitleIcon.Opacity = opacity;
+            TitleBarText.Opacity = opacity;
+        };
         EfficiencyToggle.IsChecked = App.Current.Settings.Current.EfficiencyModeForBackground;
         AppWindow.Closing += OnClosing;
         Root.Loaded += async (_, _) => await RunAsync();

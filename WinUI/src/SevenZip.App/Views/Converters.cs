@@ -18,6 +18,12 @@ public static class Converters
 
     public static string SortGlyph(SortColumn current, string column, bool descending)
         => current.ToString() == column ? (descending ? "" : "") : "";
+
+    // Accessible names: the sort arrow and repeated icon buttons say nothing to a screen reader on their own.
+    public static string SortLabel(SortColumn current, string column, string label, bool descending)
+        => current.ToString() == column ? $"{label}, sorted {(descending ? "descending" : "ascending")}" : label;
+    public static string RemoveLabel(string name) => $"Remove {name}";
+    public static string CopyLabel(string algorithm) => $"Copy {algorithm}";
 }
 
 /// <summary>Shared, responsive column widths for the archive list header and rows.</summary>

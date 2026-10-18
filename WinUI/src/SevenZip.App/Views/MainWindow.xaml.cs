@@ -56,6 +56,22 @@ public sealed partial class MainWindow : Window, IWindowHost
         settingsAccelerator.Invoked += (_, e) => { OpenSettings(); e.Handled = true; };
         Root.KeyboardAccelerators.Add(settingsAccelerator);
 
+        // Ctrl+1…Ctrl+8 select that tab, Ctrl+9 the last one (TabView guidance).
+        for (int n = 1; n <= 9; n++)
+        {
+            int index = n;
+            var tabAccelerator = new KeyboardAccelerator { Key = Windows.System.VirtualKey.Number0 + n, Modifiers = Windows.System.VirtualKeyModifiers.Control };
+            tabAccelerator.Invoked += (_, e) =>
+            {
+                int count = Tabs.TabItems.Count;
+                int target = index == 9 ? count - 1 : index - 1;
+                if (target >= 0 && target < count)
+                    Tabs.SelectedIndex = target;
+                e.Handled = true;
+            };
+            Root.KeyboardAccelerators.Add(tabAccelerator);
+        }
+
         AppWindow.Closing += OnClosing;
     }
 

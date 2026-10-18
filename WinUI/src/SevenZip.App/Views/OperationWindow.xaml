@@ -13,13 +13,13 @@
         </Grid.RowDefinitions>
 
         <!-- Title bar -->
-        <Grid x:Name="TitleArea" Padding="12,0,140,0" ColumnSpacing="10" Background="Transparent">
+        <Grid x:Name="TitleArea" Padding="16,0,140,0" ColumnSpacing="16" Background="Transparent">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
-            <Image Width="16" Height="16" VerticalAlignment="Center" Source="ms-appx:///Assets/Square44x44Logo.targetsize-16.png" />
-            <TextBlock Grid.Column="1" VerticalAlignment="Center" Style="{StaticResource CaptionTextBlockStyle}" Text="7-Zip" />
+            <Image x:Name="TitleIcon" Width="16" Height="16" VerticalAlignment="Center" AutomationProperties.AccessibilityView="Raw" Source="ms-appx:///Assets/Square44x44Logo.targetsize-16.png" />
+            <TextBlock x:Name="TitleBarText" Grid.Column="1" VerticalAlignment="Center" Style="{StaticResource CaptionTextBlockStyle}" Text="7-Zip" TextTrimming="CharacterEllipsis" />
         </Grid>
 
         <StackPanel Grid.Row="1" Padding="24,8,24,12" Spacing="10">
@@ -51,12 +51,12 @@
                     Click="OnEfficiencyClick"
                     ToolTipService.ToolTip="Efficiency mode: run quietly in the background (slower)">
                     <StackPanel Orientation="Horizontal" Spacing="6">
-                        <FontIcon FontSize="14" Glyph="&#xEC0A;" />
+                        <FontIcon FontSize="16" Glyph="&#xEC0A;" />
                         <TextBlock Text="Efficiency" />
                     </StackPanel>
                 </ToggleButton>
-                <Button x:Name="SecondaryButton" Grid.Column="1" MinWidth="96" Click="OnSecondaryClick" />
-                <Button x:Name="PrimaryButton" Grid.Column="2" MinWidth="96" Click="OnPrimaryClick" Style="{StaticResource AccentButtonStyle}" />
+                <Button x:Name="SecondaryButton" Grid.Column="1" MinWidth="120" Click="OnSecondaryClick" />
+                <Button x:Name="PrimaryButton" Grid.Column="2" MinWidth="120" Click="OnPrimaryClick" Style="{StaticResource AccentButtonStyle}" />
             </Grid>
         </Border>
     </Grid>

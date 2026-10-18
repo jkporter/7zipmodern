@@ -87,7 +87,8 @@ public sealed partial class ArchivePage : UserControl, ITabPage, INotifyProperty
 
     private void OnBreadcrumbClicked(BreadcrumbBar sender, BreadcrumbBarItemClickedEventArgs args)
     {
-        if (args.Item is BreadcrumbSegment s)
+        // The last crumb is the current folder; clicking it does nothing (F5 refreshes).
+        if (args.Index < ViewModel.Breadcrumbs.Count - 1 && args.Item is BreadcrumbSegment s)
             ViewModel.Navigate(s.Path);
     }
 
@@ -103,6 +104,42 @@ public sealed partial class ArchivePage : UserControl, ITabPage, INotifyProperty
     {
         SearchBox.Focus(FocusState.Keyboard);
         args.Handled = true;
+    }
+
+    private void OnNextPaneAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
+    {
+        MovePaneFocus(1);
+        args.Handled = true;
+    }
+
+    private void OnPreviousPaneAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
+    {
+        MovePaneFocus(-1);
+        args.Handled = true;
+    }
+
+    /// <summary>F6 / Shift+F6 cycle the major regions: toolbar, search, location, file list, details.</summary>
+    private void MovePaneFocus(int step)
+    {
+        var panes = new List<Control> { Toolbar, SearchBox, Breadcrumbs, ItemsList };
+        if (DetailsPane.Visibility == Visibility.Visible)
+            panes.Add(DetailsPane);
+
+        int current = -1;
+        for (var e = FocusManager.GetFocusedElement(XamlRoot) as DependencyObject; e is not null && current < 0; e = Microsoft.UI.Xaml.Media.VisualTreeHelper.GetParent(e))
+            current = panes.FindIndex(p => ReferenceEquals(p, e));
+
+        int start = current < 0 ? (step > 0 ? -1 : 0) : current;
+        for (int i = 1; i <= panes.Count; i++)
+        {
+            var target = panes[((start + step * i) % panes.Count + panes.Count) % panes.Count];
+            if (!target.IsEnabled)
+                continue;
+            // Containers such as the command bar and details pane aren't tab stops themselves.
+            if (target.Focus(FocusState.Keyboard)
+                || (FocusManager.FindFirstFocusableElement(target) as UIElement)?.Focus(FocusState.Keyboard) == true)
+                return;
+        }
     }
 
     private void OnSortClick(object sender, RoutedEventArgs e)

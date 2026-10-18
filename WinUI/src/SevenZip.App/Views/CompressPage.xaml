@@ -19,7 +19,7 @@
 
         <ScrollViewer>
             <StackPanel MaxWidth="{StaticResource PageMaxWidth}" Padding="{StaticResource PagePadding}" Spacing="{StaticResource SettingsCardSpacing}">
-                <TextBlock Margin="0,0,0,12" Style="{StaticResource TitleTextBlockStyle}" Text="Create archive" />
+                <TextBlock Margin="0,0,0,12" Style="{StaticResource PageTitleStyle}" Text="Create archive" />
 
                 <!-- What -->
                 <tk:SettingsExpander Description="{x:Bind ViewModel.TotalSizeText, Mode=OneWay}" Header="{x:Bind ViewModel.SourceSummary, Mode=OneWay}" IsExpanded="True">
@@ -27,8 +27,8 @@
                         <FontIcon Glyph="&#xE8B7;" />
                     </tk:SettingsExpander.HeaderIcon>
                     <StackPanel Orientation="Horizontal" Spacing="8">
-                        <Button Click="OnAddFilesClick" Content="Add files" />
-                        <Button Click="OnAddFolderClick" Content="Add folder" />
+                        <Button Click="OnAddFilesClick" Content="Add files…" />
+                        <Button Click="OnAddFolderClick" Content="Add folder…" />
                     </StackPanel>
                     <tk:SettingsExpander.ItemsHeader>
                         <ListView MaxHeight="240" ItemsSource="{x:Bind ViewModel.Sources}" SelectionMode="None">
@@ -43,9 +43,9 @@
                                         <Image Width="20" Height="20" Source="{x:Bind Icon}" />
                                         <StackPanel Grid.Column="1">
                                             <TextBlock Text="{x:Bind Name}" TextTrimming="CharacterEllipsis" />
-                                            <TextBlock Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind Folder}" TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Style="{ThemeResource ListCaptionTextStyle}" Text="{x:Bind Folder}" />
                                         </StackPanel>
-                                        <Button Grid.Column="2" Style="{StaticResource SubtleButtonStyle}" AutomationProperties.Name="Remove" Click="OnRemoveSourceClick" Tag="{x:Bind}" ToolTipService.ToolTip="Remove">
+                                        <Button Grid.Column="2" Style="{StaticResource SubtleButtonStyle}" AutomationProperties.Name="{x:Bind local:Converters.RemoveLabel(Name)}" Click="OnRemoveSourceClick" Tag="{x:Bind}" ToolTipService.ToolTip="Remove">
                                             <FontIcon FontSize="12" Glyph="&#xE711;" />
                                         </Button>
                                     </Grid>

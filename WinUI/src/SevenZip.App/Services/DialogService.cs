@@ -1,5 +1,7 @@
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Automation;
+using Microsoft.UI.Xaml.Automation.Peers;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using SevenZip.Core.Archives;
@@ -77,7 +79,7 @@ public sealed class DialogService
         {
             Title = title,
             Content = new TextBlock { Text = message, TextWrapping = TextWrapping.Wrap, IsTextSelectionEnabled = true },
-            CloseButtonText = "OK",
+            CloseButtonText = "Close",
             DefaultButton = ContentDialogButton.Close,
         };
         await ShowAsync(d);
@@ -161,6 +163,15 @@ public sealed class UiPrompts(DialogService dialogs, string? archivePath) : IOpe
         }
 
         var box = new PasswordBox { Header = "Password", MinWidth = 340, PasswordRevealMode = PasswordRevealMode.Peek };
+        // A wrong password is a validation error, so it's reported inline under the field rather than in the title.
+        var error = new TextBlock
+        {
+            Text = "That password didn't work. Check it and try again.",
+            Foreground = (Brush)Application.Current.Resources["SystemFillColorCriticalBrush"],
+            TextWrapping = TextWrapping.Wrap,
+            Visibility = retry ? Visibility.Visible : Visibility.Collapsed,
+        };
+        AutomationProperties.SetLiveSetting(error, AutomationLiveSetting.Assertive);
         var remember = new CheckBox
         {
             Content = "Remember for this archive (unlocked with Windows Hello)",
@@ -168,7 +179,7 @@ public sealed class UiPrompts(DialogService dialogs, string? archivePath) : IOpe
         };
         var d = new ContentDialog
         {
-            Title = retry ? "Wrong password — try again" : "Enter password",
+            Title = "Enter password",
             Content = new StackPanel
             {
                 Spacing = 12,
@@ -176,10 +187,11 @@ public sealed class UiPrompts(DialogService dialogs, string? archivePath) : IOpe
                 {
                     new TextBlock { Text = $"“{archiveName}” is encrypted.", TextWrapping = TextWrapping.Wrap },
                     box,
+                    error,
                     remember,
                 },
             },
-            PrimaryButtonText = "OK",
+            PrimaryButtonText = "Unlock",
             CloseButtonText = "Cancel",
             DefaultButton = ContentDialogButton.Primary,
         };

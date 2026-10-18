@@ -10,15 +10,15 @@
     <Grid Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="0,1,0,0">
         <ScrollViewer>
             <StackPanel MaxWidth="{StaticResource PageMaxWidth}" Padding="{StaticResource PagePadding}" Spacing="{StaticResource SettingsCardSpacing}">
-                <TextBlock Margin="0,0,0,12" Style="{StaticResource TitleTextBlockStyle}" Text="Benchmark" />
+                <TextBlock Margin="0,0,0,12" Style="{StaticResource PageTitleStyle}" Text="Benchmark" />
 
                 <tk:SettingsCard Header="Dictionary size">
                     <tk:SettingsCard.HeaderIcon><FontIcon Glyph="&#xE9F5;" /></tk:SettingsCard.HeaderIcon>
-                    <ComboBox MinWidth="160" ItemsSource="{x:Bind ViewModel.Dictionaries}" SelectedItem="{x:Bind ViewModel.SelectedDictionary, Mode=TwoWay}" IsEnabled="{x:Bind local:Converters.Not(ViewModel.IsRunning), Mode=OneWay}" />
+                    <ComboBox MinWidth="160" AutomationProperties.Name="Dictionary size" ItemsSource="{x:Bind ViewModel.Dictionaries}" SelectedItem="{x:Bind ViewModel.SelectedDictionary, Mode=TwoWay}" IsEnabled="{x:Bind local:Converters.Not(ViewModel.IsRunning), Mode=OneWay}" />
                 </tk:SettingsCard>
                 <tk:SettingsCard Header="CPU threads">
                     <tk:SettingsCard.HeaderIcon><FontIcon Glyph="&#xE950;" /></tk:SettingsCard.HeaderIcon>
-                    <Slider Width="220" Maximum="{x:Bind ViewModel.MaxThreads}" Minimum="1" StepFrequency="1" Value="{x:Bind ViewModel.Threads, Mode=TwoWay}" IsEnabled="{x:Bind local:Converters.Not(ViewModel.IsRunning), Mode=OneWay}" />
+                    <Slider Width="220" AutomationProperties.Name="CPU threads" Maximum="{x:Bind ViewModel.MaxThreads}" Minimum="1" StepFrequency="1" Value="{x:Bind ViewModel.Threads, Mode=TwoWay}" IsEnabled="{x:Bind local:Converters.Not(ViewModel.IsRunning), Mode=OneWay}" />
                 </tk:SettingsCard>
 
                 <Grid Margin="0,12,0,0" ColumnSpacing="12">
@@ -26,11 +26,11 @@
                         <ColumnDefinition />
                         <ColumnDefinition />
                     </Grid.ColumnDefinitions>
-                    <StackPanel Padding="20" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="{StaticResource OverlayCornerRadius}" Spacing="4">
+                    <StackPanel Padding="16" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="{StaticResource OverlayCornerRadius}" Spacing="4">
                         <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Compressing" />
                         <TextBlock Style="{StaticResource TitleLargeTextBlockStyle}" Text="{x:Bind ViewModel.CompressSpeed, Mode=OneWay}" />
                     </StackPanel>
-                    <StackPanel Grid.Column="1" Padding="20" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="{StaticResource OverlayCornerRadius}" Spacing="4">
+                    <StackPanel Grid.Column="1" Padding="16" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="{StaticResource OverlayCornerRadius}" Spacing="4">
                         <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Decompressing" />
                         <TextBlock Style="{StaticResource TitleLargeTextBlockStyle}" Text="{x:Bind ViewModel.DecompressSpeed, Mode=OneWay}" />
                     </StackPanel>
