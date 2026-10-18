@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="SevenZip.App.Views.CompressPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:SevenZip.App.Views"
+    xmlns:vm="using:SevenZip.App.ViewModels"
+    xmlns:core="using:SevenZip.Core.Compression"
+    xmlns:tk="using:CommunityToolkit.WinUI.Controls"
+    AllowDrop="True"
+    DragOver="OnDragOver"
+    Drop="OnDrop">
+
+    <Grid Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="0,1,0,0">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <ScrollViewer>
+            <StackPanel MaxWidth="{StaticResource PageMaxWidth}" Padding="{StaticResource PagePadding}" Spacing="{StaticResource SettingsCardSpacing}">
+                <TextBlock Margin="0,0,0,12" Style="{StaticResource TitleTextBlockStyle}" Text="Create archive" />
+
+                <!-- What -->
+                <tk:SettingsExpander Description="{x:Bind ViewModel.TotalSizeText, Mode=OneWay}" Header="{x:Bind ViewModel.SourceSummary, Mode=OneWay}" IsExpanded="True">
+                    <tk:SettingsExpander.HeaderIcon>
+                        <FontIcon Glyph="&#xE8B7;" />
+                    </tk:SettingsExpander.HeaderIcon>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button Click="OnAddFilesClick" Content="Add files" />
+                        <Button Click="OnAddFolderClick" Content="Add folder" />
+                    </StackPanel>
+                    <tk:SettingsExpander.ItemsHeader>
+                        <ListView MaxHeight="240" ItemsSource="{x:Bind ViewModel.Sources}" SelectionMode="None">
+                            <ListView.ItemTemplate>
+                                <DataTemplate x:DataType="vm:SourceItem">
+                                    <Grid Padding="44,6,4,6" ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <Image Width="20" Height="20" Source="{x:Bind Icon}" />
+                                        <StackPanel Grid.Column="1">
+                                            <TextBlock Text="{x:Bind Name}" TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind Folder}" TextTrimming="CharacterEllipsis" />
+                                        </StackPanel>
+                                        <Button Grid.Column="2" Style="{StaticResource SubtleButtonStyle}" AutomationProperties.Name="Remove" Click="OnRemoveSourceClick" Tag="{x:Bind}" ToolTipService.ToolTip="Remove">
+                                            <FontIcon FontSize="12" Glyph="&#xE711;" />
+                                        </Button>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </tk:SettingsExpander.ItemsHeader>
+                </tk:SettingsExpander>
+
+                <!-- Where -->
+                <tk:SettingsCard Description="The new archive is written next to a temporary name and only appears once it's complete." Header="Save as">
+                    <tk:SettingsCard.HeaderIcon>
+                        <FontIcon Glyph="&#xE74E;" />
+                    </tk:SettingsCard.HeaderIcon>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBox MinWidth="320" MaxWidth="420" Text="{x:Bind ViewModel.ArchivePath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Archive path" />
+                        <Button Click="OnBrowseClick" Content="Browse…" />
+                    </StackPanel>
+                </tk:SettingsCard>
+
+                <!-- Format -->
+                <tk:SettingsCard Description="{x:Bind ViewModel.FormatDescription, Mode=OneWay}" Header="Format">
+                    <tk:SettingsCard.HeaderIcon>
+                        <FontIcon Glyph="&#xE7C3;" />
+                    </tk:SettingsCard.HeaderIcon>
+                    <ComboBox MinWidth="200" DisplayMemberPath="DisplayName" ItemsSource="{x:Bind ViewModel.Formats}" SelectedItem="{x:Bind ViewModel.SelectedFormat, Mode=TwoWay}" />
+                </tk:SettingsCard>
+
+                <!-- Compression -->
+                <tk:SettingsExpander Description="{x:Bind ViewModel.MemoryText, Mode=OneWay}" Header="Compression level">
+                    <tk:SettingsExpander.HeaderIcon>
+                        <FontIcon Glyph="&#xE9F5;" />
+                    </tk:SettingsExpander.HeaderIcon>
+                    <ComboBox MinWidth="200" ItemsSource="{x:Bind ViewModel.LevelChoices}" SelectedItem="{x:Bind ViewModel.SelectedLevel, Mode=TwoWay}" />
+                    <tk:SettingsExpander.Items>
+                        <tk:SettingsCard Header="Method" Visibility="{x:Bind ViewModel.ShowMethodOptions, Mode=OneWay}">
+                            <ComboBox MinWidth="200" DisplayMemberPath="DisplayName" ItemsSource="{x:Bind ViewModel.MethodChoices}" SelectedItem="{x:Bind ViewModel.SelectedMethod, Mode=TwoWay}" />
+                        </tk:SettingsCard>
+                        <tk:SettingsCard Description="Bigger finds more repetition but needs more memory to compress and extract." Header="Dictionary size" Visibility="{x:Bind ViewModel.ShowMethodOptions, Mode=OneWay}">
+                            <ComboBox MinWidth="200" ItemsSource="{x:Bind ViewModel.DictionaryChoices}" SelectedItem="{x:Bind ViewModel.SelectedDictionary, Mode=TwoWay}" />
+                        </tk:SettingsCard>
+                        <tk:SettingsCard Header="Word size" Visibility="{x:Bind ViewModel.ShowMethodOptions, Mode=OneWay}">
+                            <ComboBox MinWidth="200" ItemsSource="{x:Bind ViewModel.WordSizeChoices}" SelectedItem="{x:Bind ViewModel.SelectedWordSize, Mode=TwoWay}" />
+                        </tk:SettingsCard>
+                        <tk:SettingsCard Description="Solid archives compress similar files together: smaller, but changing one file rewrites its whole block." Header="Solid block size" Visibility="{x:Bind ViewModel.ShowSolid, Mode=OneWay}">
+                            <ComboBox MinWidth="200" ItemsSource="{x:Bind ViewModel.SolidChoices}" SelectedItem="{x:Bind ViewModel.SelectedSolid, Mode=TwoWay}" />
+                        </tk:SettingsCard>
+                        <tk:SettingsCard Header="CPU threads" Visibility="{x:Bind ViewModel.ShowThreads, Mode=OneWay}">
+                            <ComboBox MinWidth="200" ItemsSource="{x:Bind ViewModel.ThreadChoices}" SelectedItem="{x:Bind ViewModel.SelectedThreads, Mode=TwoWay}" />
+                        </tk:SettingsCard>
+                    </tk:SettingsExpander.Items>
+                </tk:SettingsExpander>
+
+                <!-- Encryption -->
+                <tk:SettingsExpander Description="Protect the archive with a password" Header="Encryption" Visibility="{x:Bind ViewModel.ShowEncryption, Mode=OneWay}">
+                    <tk:SettingsExpander.HeaderIcon>
+                        <FontIcon Glyph="&#xE72E;" />
+                    </tk:SettingsExpander.HeaderIcon>
+                    <tk:SettingsExpander.Items>
+                        <tk:SettingsCard ContentAlignment="Left">
+                            <StackPanel MinWidth="360" Spacing="10">
+                                <PasswordBox Header="Password" Password="{x:Bind ViewModel.Password, Mode=TwoWay}" PasswordRevealMode="Peek" />
+                                <PasswordBox Header="Confirm password" Password="{x:Bind ViewModel.ConfirmPassword, Mode=TwoWay}" PasswordRevealMode="Peek" />
+                                <TextBlock Foreground="{ThemeResource SystemFillColorCriticalBrush}" Text="{x:Bind ViewModel.PasswordError, Mode=OneWay}" Visibility="{x:Bind local:Converters.VisibleIfNotEmpty(ViewModel.PasswordError), Mode=OneWay}" />
+                                <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Style="{StaticResource CaptionTextBlockStyle}" Text="{x:Bind ViewModel.PasswordHint, Mode=OneWay}" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </tk:SettingsCard>
+                        <tk:SettingsCard Description="Without the password nobody can even see which files are inside." Header="Encrypt file names" Visibility="{x:Bind ViewModel.ShowEncryptNames, Mode=OneWay}">
+                            <ToggleSwitch IsOn="{x:Bind ViewModel.EncryptFileNames, Mode=TwoWay}" />
+                        </tk:SettingsCard>
+                        <tk:SettingsCard Header="Encryption method" Visibility="{x:Bind ViewModel.ShowZipEncryption, Mode=OneWay}">
+                            <ComboBox MinWidth="200" ItemsSource="{x:Bind ViewModel.ZipEncryptionChoices}" SelectedItem="{x:Bind ViewModel.SelectedZipEncryption, Mode=TwoWay}" />
+                        </tk:SettingsCard>
+                    </tk:SettingsExpander.Items>
+                </tk:SettingsExpander>
+
+                <!-- Volumes -->
+                <tk:SettingsCard Description="Split into parts named .001, .002… — for size-limited uploads, email or FAT32 drives." Header="Split into volumes" Visibility="{x:Bind ViewModel.ShowVolumes, Mode=OneWay}">
+                    <tk:SettingsCard.HeaderIcon>
+                        <FontIcon Glyph="&#xE8A9;" />
+                    </tk:SettingsCard.HeaderIcon>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <ComboBox MinWidth="180" ItemsSource="{x:Bind ViewModel.VolumeChoices}" SelectedItem="{x:Bind ViewModel.SelectedVolume, Mode=TwoWay}" />
+                        <TextBox Width="110" PlaceholderText="or e.g. 250m" Text="{x:Bind ViewModel.CustomVolume, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Custom volume size" />
+                    </StackPanel>
+                </tk:SettingsCard>
+
+                <!-- After -->
+                <tk:SettingsCard Description="Opens the Windows Share sheet with the new archive (replaces &quot;Compress and email&quot;)." Header="Share when done">
+                    <tk:SettingsCard.HeaderIcon>
+                        <FontIcon Glyph="&#xE72D;" />
+                    </tk:SettingsCard.HeaderIcon>
+                    <ToggleSwitch IsOn="{x:Bind ViewModel.ShareAfter, Mode=TwoWay}" />
+                </tk:SettingsCard>
+                <tk:SettingsCard Description="Moves the original files to the Recycle Bin after the archive is created successfully." Header="Delete originals">
+                    <tk:SettingsCard.HeaderIcon>
+                        <FontIcon Glyph="&#xE74D;" />
+                    </tk:SettingsCard.HeaderIcon>
+                    <ToggleSwitch IsOn="{x:Bind ViewModel.DeleteAfter, Mode=TwoWay}" />
+                </tk:SettingsCard>
+
+                <!-- Advanced -->
+                <tk:SettingsExpander Description="Update mode, paths, timestamps and engine parameters" Header="Advanced">
+                    <tk:SettingsExpander.HeaderIcon>
+                        <FontIcon Glyph="&#xE713;" />
+                    </tk:SettingsExpander.HeaderIcon>
+                    <tk:SettingsExpander.Items>
+                        <tk:SettingsCard Description="Used when adding to an archive that already exists." Header="Update mode">
+                            <ComboBox MinWidth="220" ItemsSource="{x:Bind ViewModel.UpdateModes}" SelectedItem="{x:Bind ViewModel.SelectedUpdateMode, Mode=TwoWay}" />
+                        </tk:SettingsCard>
+                        <tk:SettingsCard Header="Paths">
+                            <ComboBox MinWidth="220" ItemsSource="{x:Bind ViewModel.PathModes}" SelectedItem="{x:Bind ViewModel.SelectedPathMode, Mode=TwoWay}" />
+                        </tk:SettingsCard>
+                        <tk:SettingsCard Header="Store creation times">
+                            <ToggleSwitch IsOn="{x:Bind ViewModel.StoreCreationTime, Mode=TwoWay}" />
+                        </tk:SettingsCard>
+                        <tk:SettingsCard Header="Store last-access times">
+                            <ToggleSwitch IsOn="{x:Bind ViewModel.StoreAccessTime, Mode=TwoWay}" />
+                        </tk:SettingsCard>
+                        <tk:SettingsCard Description="Otherwise folder links and junctions are stored as empty folders." Header="Follow folder links">
+                            <ToggleSwitch IsOn="{x:Bind ViewModel.FollowLinks, Mode=TwoWay}" />
+                        </tk:SettingsCard>
+                        <tk:SettingsCard Description="Engine switches, e.g. qs=on f=off (same syntax as classic 7-Zip)." Header="Parameters">
+                            <TextBox MinWidth="220" FontFamily="{StaticResource MonoFont}" Text="{x:Bind ViewModel.Parameters, Mode=TwoWay}" />
+                        </tk:SettingsCard>
+                    </tk:SettingsExpander.Items>
+                </tk:SettingsExpander>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Footer -->
+        <Border Grid.Row="1" Padding="24,14" Background="{ThemeResource SolidBackgroundFillColorBaseBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="0,1,0,0">
+            <Grid MaxWidth="{StaticResource PageMaxWidth}" ColumnSpacing="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <CheckBox x:Name="RememberCheck" Content="Use these settings next time" />
+                <Button Grid.Column="1" Click="OnCancelClick" Content="Close" />
+                <Button Grid.Column="2" MinWidth="120" Click="OnCreateClick" IsEnabled="{x:Bind ViewModel.CanCreate, Mode=OneWay}" Style="{StaticResource AccentButtonStyle}">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <ProgressRing Width="16" Height="16" IsActive="{x:Bind ViewModel.IsWorking, Mode=OneWay}" Visibility="{x:Bind ViewModel.IsWorking, Mode=OneWay}" Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}" />
+                        <TextBlock Text="Create" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

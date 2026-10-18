@@ -1,0 +1,55 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <!-- Purpose-built for Windows 11: minimum 22000 (21H2), built against the 24H2 SDK. -->
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.22000.0</TargetPlatformMinVersion>
+    <SupportedOSPlatformVersion>10.0.22000.0</SupportedOSPlatformVersion>
+    <RootNamespace>SevenZip.App</RootNamespace>
+    <AssemblyName>SevenZip</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\7zip.ico</ApplicationIcon>
+    <Platforms>x64;ARM64</Platforms>
+    <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
+    <SevenZipArch>x64</SevenZipArch>
+    <SevenZipArch Condition="'$(Platform)' == 'ARM64'">arm64</SevenZipArch>
+    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == ''">win-$(SevenZipArch)</RuntimeIdentifier>
+    <UseWinUI>true</UseWinUI>
+    <EnableMsixTooling>true</EnableMsixTooling>
+    <!-- Program.cs owns Main so activation can be redirected before XAML starts. -->
+    <DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
+  </PropertyGroup>
+
+  <!--
+    Default build = MSIX (identity enables the Windows 11 context menu, file associations, share target,
+    notifications and jump lists). `-p:Unpackaged=true` produces a self-contained loose build for quick
+    iteration on machines without Developer Mode; identity-only features degrade gracefully.
+  -->
+  <PropertyGroup Condition="'$(Unpackaged)' == 'true'">
+    <WindowsPackageType>None</WindowsPackageType>
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <DefineConstants>$(DefineConstants);UNPACKAGED</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.5.1" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.2705" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" Version="8.2.251219" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SevenZip.Core\SevenZip.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Manifest Include="$(ApplicationManifest)" />
+    <Content Include="Assets\**\*.png;Assets\*.ico" />
+    <!-- Native engine + shell extension built by build\Build-Native.ps1 -->
+    <Content Include="$(SevenZipNativeDir)7z.dll" Link="7z.dll" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(SevenZipNativeDir)SevenZip.ShellExtension.dll" Link="SevenZip.ShellExtension.dll"
+             CopyToOutputDirectory="PreserveNewest" Condition="Exists('$(SevenZipNativeDir)SevenZip.ShellExtension.dll')" />
+  </ItemGroup>
+
+</Project>

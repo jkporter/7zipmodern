@@ -1,0 +1,17 @@
+<Project>
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <Version>26.04.0</Version>
+    <Company>7-Zip WinUI contributors</Company>
+    <Product>7-Zip</Product>
+    <Copyright>Engine: Copyright (C) Igor Pavlov. GNU LGPL. UI: same license.</Copyright>
+
+    <!-- Location of the native engine built from ..\CPP by build\Build-Native.ps1 -->
+    <SevenZipNativeDir Condition="'$(SevenZipNativeDir)' == ''">$(MSBuildThisFileDirectory)artifacts\native\$(Platform)\</SevenZipNativeDir>
+    <SevenZipNativeDir Condition="'$(Platform)' == '' or '$(Platform)' == 'AnyCPU'">$(MSBuildThisFileDirectory)artifacts\native\x64\</SevenZipNativeDir>
+  </PropertyGroup>
+</Project>

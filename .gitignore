@@ -1,0 +1,12 @@
+# C++ build outputs (nmake)
+CPP/**/x64/
+CPP/**/x86/
+CPP/**/arm64/
+*.obj
+*.pch
+*.ilk
+*.exp
+*.idb
+*.pdb
+.vs/
+*.user

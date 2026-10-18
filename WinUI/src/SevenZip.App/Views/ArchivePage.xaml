@@ -1,0 +1,379 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="SevenZip.App.Views.ArchivePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:SevenZip.App.Views"
+    xmlns:vm="using:SevenZip.App.ViewModels"
+    AllowDrop="True"
+    DragOver="OnDragOver"
+    Drop="OnDrop"
+    SizeChanged="OnSizeChanged">
+
+    <UserControl.Resources>
+        <local:ColumnLayout x:Key="Columns" />
+    </UserControl.Resources>
+
+    <UserControl.KeyboardAccelerators>
+        <KeyboardAccelerator Key="E" Modifiers="Control" Invoked="OnExtractAccelerator" />
+        <KeyboardAccelerator Key="F" Modifiers="Control" Invoked="OnSearchAccelerator" />
+        <KeyboardAccelerator Key="Up" Modifiers="Menu" Invoked="OnUpAccelerator" />
+        <KeyboardAccelerator Key="F5" Invoked="OnRefreshAccelerator" />
+        <KeyboardAccelerator Key="C" Modifiers="Control" Invoked="OnCopyAccelerator" />
+        <KeyboardAccelerator Key="V" Modifiers="Control" Invoked="OnPasteAccelerator" />
+    </UserControl.KeyboardAccelerators>
+
+    <Grid Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="0,1,0,0">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Toolbar -->
+        <Grid Padding="8,4,12,0" ColumnSpacing="8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <CommandBar
+                HorizontalAlignment="Left"
+                Background="Transparent"
+                DefaultLabelPosition="Right"
+                IsEnabled="{x:Bind local:Converters.Not(ViewModel.IsLoading), Mode=OneWay}">
+                <AppBarButton Label="Extract" ToolTipService.ToolTip="Extract (Ctrl+E)">
+                    <AppBarButton.Icon>
+                        <FontIcon Glyph="&#xE8B7;" />
+                    </AppBarButton.Icon>
+                    <AppBarButton.Flyout>
+                        <MenuFlyout Placement="BottomEdgeAlignedLeft">
+                            <MenuFlyoutItem Click="OnExtractClick" Text="Extract to…">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8B7;" /></MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutItem x:Name="ExtractSmartItem" Click="OnExtractSmartClick" Text="Extract to folder">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8F4;" /></MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutItem Click="OnExtractHereClick" Text="Extract here">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE896;" /></MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                        </MenuFlyout>
+                    </AppBarButton.Flyout>
+                </AppBarButton>
+                <AppBarButton Label="Add" IsEnabled="{x:Bind ViewModel.CanModify, Mode=OneWay}">
+                    <AppBarButton.Icon>
+                        <FontIcon Glyph="&#xE710;" />
+                    </AppBarButton.Icon>
+                    <AppBarButton.Flyout>
+                        <MenuFlyout Placement="BottomEdgeAlignedLeft">
+                            <MenuFlyoutItem Click="OnAddFilesClick" Text="Add files…">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8E5;" /></MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutItem Click="OnAddFolderClick" Text="Add folder…">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8F4;" /></MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutSeparator />
+                            <MenuFlyoutItem Click="OnNewFolderClick" Text="New folder">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8F4;" /></MenuFlyoutItem.Icon>
+                                <MenuFlyoutItem.KeyboardAccelerators>
+                                    <KeyboardAccelerator Key="N" Modifiers="Control,Shift" />
+                                </MenuFlyoutItem.KeyboardAccelerators>
+                            </MenuFlyoutItem>
+                        </MenuFlyout>
+                    </AppBarButton.Flyout>
+                </AppBarButton>
+                <AppBarSeparator />
+                <AppBarButton x:Name="RenameButton" Click="OnRenameClick" IsEnabled="False" Label="Rename" ToolTipService.ToolTip="Rename (F2)">
+                    <AppBarButton.Icon><FontIcon Glyph="&#xE8AC;" /></AppBarButton.Icon>
+                </AppBarButton>
+                <AppBarButton x:Name="DeleteButton" Click="OnDeleteClick" IsEnabled="False" Label="Delete" ToolTipService.ToolTip="Delete (Del)">
+                    <AppBarButton.Icon><FontIcon Glyph="&#xE74D;" /></AppBarButton.Icon>
+                </AppBarButton>
+                <AppBarButton Click="OnShareClick" Label="Share" ToolTipService.ToolTip="Share with the Windows Share sheet">
+                    <AppBarButton.Icon><FontIcon Glyph="&#xE72D;" /></AppBarButton.Icon>
+                </AppBarButton>
+                <AppBarButton Click="OnTestClick" Label="Test" ToolTipService.ToolTip="Check the archive for errors">
+                    <AppBarButton.Icon><FontIcon Glyph="&#xE9D5;" /></AppBarButton.Icon>
+                </AppBarButton>
+                <AppBarSeparator />
+                <AppBarToggleButton x:Name="DetailsToggle" Click="OnDetailsToggleClick" Label="Details" ToolTipService.ToolTip="Details pane (Alt+Enter)">
+                    <AppBarToggleButton.Icon><FontIcon Glyph="&#xE89F;" /></AppBarToggleButton.Icon>
+                    <AppBarToggleButton.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="Enter" Modifiers="Menu" />
+                    </AppBarToggleButton.KeyboardAccelerators>
+                </AppBarToggleButton>
+                <CommandBar.SecondaryCommands>
+                    <AppBarButton Click="OnRevealArchiveClick" Label="Show archive in File Explorer">
+                        <AppBarButton.Icon><FontIcon Glyph="&#xED25;" /></AppBarButton.Icon>
+                    </AppBarButton>
+                    <AppBarButton Click="OnCopyPathClick" Label="Copy archive path">
+                        <AppBarButton.Icon><FontIcon Glyph="&#xE8C8;" /></AppBarButton.Icon>
+                    </AppBarButton>
+                    <AppBarButton Click="OnHashArchiveClick" Label="Checksums of archive file">
+                        <AppBarButton.Icon><FontIcon Glyph="&#xE73E;" /></AppBarButton.Icon>
+                    </AppBarButton>
+                    <AppBarSeparator />
+                    <AppBarButton Click="OnRefreshClick" Label="Refresh">
+                        <AppBarButton.Icon><FontIcon Glyph="&#xE72C;" /></AppBarButton.Icon>
+                        <AppBarButton.KeyboardAccelerators>
+                            <KeyboardAccelerator Key="R" Modifiers="Control" />
+                        </AppBarButton.KeyboardAccelerators>
+                    </AppBarButton>
+                </CommandBar.SecondaryCommands>
+            </CommandBar>
+            <AutoSuggestBox
+                x:Name="SearchBox"
+                Grid.Column="1"
+                Width="260"
+                VerticalAlignment="Center"
+                PlaceholderText="Search this archive"
+                QueryIcon="Find"
+                Text="{x:Bind ViewModel.SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+        </Grid>
+
+        <!-- Navigation -->
+        <Grid Grid.Row="1" Padding="12,2,12,6" ColumnSpacing="4">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Button
+                Style="{StaticResource SubtleButtonStyle}"
+                AutomationProperties.Name="Up one level"
+                Click="OnUpClick"
+                IsEnabled="{x:Bind ViewModel.CanGoUp, Mode=OneWay}"
+                ToolTipService.ToolTip="Up (Alt+Up)">
+                <FontIcon FontSize="14" Glyph="&#xE74A;" />
+            </Button>
+            <BreadcrumbBar
+                Grid.Column="1"
+                Margin="4,0,0,0"
+                VerticalAlignment="Center"
+                ItemClicked="OnBreadcrumbClicked"
+                ItemsSource="{x:Bind ViewModel.Breadcrumbs}" />
+        </Grid>
+
+        <!-- Messages -->
+        <StackPanel Grid.Row="2" Padding="12,0,12,4" Spacing="4">
+            <InfoBar
+                IsClosable="False"
+                IsOpen="{x:Bind local:Converters.IsNotEmpty(ViewModel.LoadError), Mode=OneWay}"
+                Message="{x:Bind ViewModel.LoadError, Mode=OneWay}"
+                Severity="Error"
+                Title="Can't open this archive">
+                <InfoBar.ActionButton>
+                    <Button Click="OnRetryClick" Content="Try again" />
+                </InfoBar.ActionButton>
+            </InfoBar>
+            <InfoBar
+                IsOpen="{x:Bind local:Converters.IsNotEmpty(ViewModel.Warning), Mode=OneWay}"
+                Message="{x:Bind ViewModel.Warning, Mode=OneWay}"
+                Severity="Warning" />
+            <ItemsControl ItemsSource="{x:Bind ViewModel.PendingEdits}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:PendingEdit">
+                        <InfoBar IsClosable="False" IsOpen="True" Margin="0,0,0,4" Severity="Informational" Title="{x:Bind ArchivePath}" Message="was changed in another app. Update the copy in the archive?">
+                            <StackPanel Margin="0,0,0,12" Orientation="Horizontal" Spacing="8">
+                                <Button Click="OnApplyEditClick" Content="Update archive" Style="{StaticResource AccentButtonStyle}" Tag="{x:Bind}" />
+                                <Button Click="OnDiscardEditClick" Content="Discard" Tag="{x:Bind}" />
+                            </StackPanel>
+                        </InfoBar>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+
+        <!-- Content -->
+        <Grid Grid.Row="3" Padding="12,0,12,0" ColumnSpacing="12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition x:Name="DetailsColumn" Width="300" />
+            </Grid.ColumnDefinitions>
+
+            <Grid Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="{StaticResource OverlayCornerRadius}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!-- Column header -->
+                <Grid Padding="12,4,16,4" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,0,0,1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="{Binding ModifiedWidth, Source={StaticResource Columns}}" />
+                        <ColumnDefinition Width="{Binding TypeWidth, Source={StaticResource Columns}}" />
+                        <ColumnDefinition Width="{Binding SizeWidth, Source={StaticResource Columns}}" />
+                        <ColumnDefinition Width="{Binding PackedWidth, Source={StaticResource Columns}}" />
+                    </Grid.ColumnDefinitions>
+                    <Button Style="{StaticResource ColumnHeaderButtonStyle}" Click="OnSortClick" Tag="Name">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <TextBlock Text="Name" />
+                            <FontIcon FontSize="10" Glyph="{x:Bind local:Converters.SortGlyph(ViewModel.Sort, 'Name', ViewModel.SortDescending), Mode=OneWay}" />
+                        </StackPanel>
+                    </Button>
+                    <Button Grid.Column="1" Style="{StaticResource ColumnHeaderButtonStyle}" Click="OnSortClick" Tag="Modified">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <TextBlock Text="Date modified" />
+                            <FontIcon FontSize="10" Glyph="{x:Bind local:Converters.SortGlyph(ViewModel.Sort, 'Modified', ViewModel.SortDescending), Mode=OneWay}" />
+                        </StackPanel>
+                    </Button>
+                    <Button Grid.Column="2" Style="{StaticResource ColumnHeaderButtonStyle}" Click="OnSortClick" Tag="Type">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <TextBlock Text="Type" />
+                            <FontIcon FontSize="10" Glyph="{x:Bind local:Converters.SortGlyph(ViewModel.Sort, 'Type', ViewModel.SortDescending), Mode=OneWay}" />
+                        </StackPanel>
+                    </Button>
+                    <Button Grid.Column="3" Style="{StaticResource ColumnHeaderButtonStyle}" Click="OnSortClick" Tag="Size">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <TextBlock Text="Size" />
+                            <FontIcon FontSize="10" Glyph="{x:Bind local:Converters.SortGlyph(ViewModel.Sort, 'Size', ViewModel.SortDescending), Mode=OneWay}" />
+                        </StackPanel>
+                    </Button>
+                    <Button Grid.Column="4" Style="{StaticResource ColumnHeaderButtonStyle}" Click="OnSortClick" Tag="Packed">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <TextBlock Text="Packed" />
+                            <FontIcon FontSize="10" Glyph="{x:Bind local:Converters.SortGlyph(ViewModel.Sort, 'Packed', ViewModel.SortDescending), Mode=OneWay}" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
+
+                <ListView
+                    x:Name="ItemsList"
+                    Grid.Row="1"
+                    Padding="0,4"
+                    AllowDrop="False"
+                    CanDragItems="True"
+                    DoubleTapped="OnItemsDoubleTapped"
+                    DragItemsStarting="OnDragItemsStarting"
+                    IsItemClickEnabled="False"
+                    ItemsSource="{x:Bind ViewModel.Items, Mode=OneWay}"
+                    KeyDown="OnItemsKeyDown"
+                    SelectionChanged="OnSelectionChanged"
+                    SelectionMode="Extended">
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem" BasedOn="{StaticResource DefaultListViewItemStyle}">
+                            <Setter Property="MinHeight" Value="36" />
+                            <Setter Property="Padding" Value="12,0,12,0" />
+                        </Style>
+                    </ListView.ItemContainerStyle>
+                    <ListView.ContextFlyout>
+                        <MenuFlyout x:Name="ItemMenu" Opening="OnItemMenuOpening">
+                            <MenuFlyoutItem x:Name="MenuOpen" Click="OnMenuOpenClick" Text="Open" FontWeight="SemiBold">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8E5;" /></MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutItem x:Name="MenuOpenWith" Click="OnMenuOpenWithClick" Text="Open with…">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE7AC;" /></MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutItem x:Name="MenuOpenInside" Click="OnMenuOpenInsideClick" Text="Open as archive">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8B7;" /></MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutSeparator />
+                            <MenuFlyoutItem Click="OnExtractClick" Text="Extract to…">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8B7;" /></MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutItem Click="OnMenuCopyClick" Text="Copy">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8C8;" /></MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutItem Click="OnShareClick" Text="Share">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE72D;" /></MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutSeparator />
+                            <MenuFlyoutItem x:Name="MenuRename" Click="OnRenameClick" Text="Rename">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8AC;" /></MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutItem x:Name="MenuDelete" Click="OnDeleteClick" Text="Delete">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE74D;" /></MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutSeparator />
+                            <MenuFlyoutItem Click="OnMenuPropertiesClick" Text="Properties">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE946;" /></MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                        </MenuFlyout>
+                    </ListView.ContextFlyout>
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="vm:ItemViewModel">
+                            <Grid Background="Transparent" RightTapped="OnItemRightTapped" AutomationProperties.Name="{x:Bind AutomationName}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="{Binding ModifiedWidth, Source={StaticResource Columns}}" />
+                                    <ColumnDefinition Width="{Binding TypeWidth, Source={StaticResource Columns}}" />
+                                    <ColumnDefinition Width="{Binding SizeWidth, Source={StaticResource Columns}}" />
+                                    <ColumnDefinition Width="{Binding PackedWidth, Source={StaticResource Columns}}" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Orientation="Horizontal" Spacing="10" Padding="0,4">
+                                    <Grid Width="20" Height="20" VerticalAlignment="Center">
+                                        <Image Source="{x:Bind Icon}" />
+                                        <FontIcon
+                                            Margin="0,0,-4,-4"
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Bottom"
+                                            FontSize="10"
+                                            Foreground="{ThemeResource SystemFillColorCautionBrush}"
+                                            Glyph="&#xE72E;"
+                                            Visibility="{x:Bind LockVisibility}" />
+                                    </Grid>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{x:Bind Name}" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorTertiaryBrush}" Text="{x:Bind Location}" Visibility="{x:Bind local:Converters.VisibleIfNotEmpty(Location)}" />
+                                    </StackPanel>
+                                </StackPanel>
+                                <TextBlock Grid.Column="1" Style="{StaticResource CellTextStyle}" Text="{x:Bind ModifiedText}" />
+                                <TextBlock Grid.Column="2" Style="{StaticResource CellTextStyle}" Text="{x:Bind TypeName}" />
+                                <TextBlock Grid.Column="3" Style="{StaticResource CellTextStyle}" HorizontalTextAlignment="Right" Text="{x:Bind SizeText}" />
+                                <TextBlock Grid.Column="4" Style="{StaticResource CellTextStyle}" HorizontalTextAlignment="Right" Text="{x:Bind PackedText}" ToolTipService.ToolTip="{x:Bind RatioText}" />
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+
+                <ProgressRing Grid.Row="1" Width="40" Height="40" IsActive="{x:Bind ViewModel.IsLoading, Mode=OneWay}" />
+                <TextBlock
+                    Grid.Row="1"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                    Text="{x:Bind EmptyText, Mode=OneWay}"
+                    Visibility="{x:Bind EmptyVisibility, Mode=OneWay}" />
+            </Grid>
+
+            <!-- Details pane -->
+            <ScrollViewer x:Name="DetailsPane" Grid.Column="1" VerticalScrollBarVisibility="Auto">
+                <StackPanel Padding="4,8,4,16" Spacing="12">
+                    <Image Width="48" Height="48" HorizontalAlignment="Left" Source="{x:Bind ViewModel.DetailsIcon, Mode=OneWay}" />
+                    <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="{x:Bind ViewModel.DetailsTitle, Mode=OneWay}" TextWrapping="Wrap" IsTextSelectionEnabled="True" />
+                    <ItemsControl ItemsSource="{x:Bind ViewModel.Details}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:PropertyRow">
+                                <StackPanel Margin="0,0,0,10">
+                                    <TextBlock Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind Name}" />
+                                    <TextBlock IsTextSelectionEnabled="True" Text="{x:Bind Value}" TextWrapping="Wrap" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+
+        <!-- Status bar -->
+        <Grid Grid.Row="4" Padding="16,6" ColumnSpacing="16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind ViewModel.StatusText, Mode=OneWay}" />
+            <TextBlock Grid.Column="1" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind ViewModel.SelectionText, Mode=OneWay}" />
+            <StackPanel
+                Grid.Column="2"
+                Orientation="Horizontal"
+                Spacing="6"
+                ToolTipService.ToolTip="{x:Bind ViewModel.ReadOnlyReason, Mode=OneWay}"
+                Visibility="{x:Bind ReadOnlyVisibility, Mode=OneWay}">
+                <FontIcon FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Glyph="&#xE72E;" />
+                <TextBlock Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Read-only" />
+            </StackPanel>
+        </Grid>
+    </Grid>
+</UserControl>
