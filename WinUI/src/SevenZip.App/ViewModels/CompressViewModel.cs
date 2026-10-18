@@ -319,7 +319,7 @@ public sealed partial class CompressViewModel : ObservableObject
             }
             return (total, count);
         });
-        TotalSizeText = $"{files:N0} files · {PropertyFormatter.FormatSize(size)}";
+        TotalSizeText = $"{PropertyFormatter.FormatCount(files, "file")} · {PropertyFormatter.FormatSize(size)}";
     }
 
     public CompressionSettings BuildSettings()

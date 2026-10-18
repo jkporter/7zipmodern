@@ -100,7 +100,7 @@ public sealed partial class ArchiveViewModel : ObservableObject, IDisposable
                     }
                 }
                 return new OpenResult(session, TryUnwrapTarball(session, ctx));
-            }, r => $"{r.Session.Entries.Count:N0} items");
+            }, r => PropertyFormatter.FormatCount(r.Session.Entries.Count, "item"));
 
             if (opened is null)
             {
@@ -299,7 +299,7 @@ public sealed partial class ArchiveViewModel : ObservableObject, IDisposable
         var folders = Items.Count(i => i.IsFolder);
         var files = Items.Count - folders;
         var size = Items.Aggregate(0UL, (s, i) => s + i.Size);
-        StatusText = $"{Items.Count:N0} items ({folders:N0} folders, {files:N0} files) · {PropertyFormatter.FormatSize(size)}";
+        StatusText = $"{PropertyFormatter.FormatCount(Items.Count, "item")} ({PropertyFormatter.FormatCount(folders, "folder")}, {PropertyFormatter.FormatCount(files, "file")}) · {PropertyFormatter.FormatSize(size)}";
     }
 
     public void ShowDetails(IReadOnlyList<ItemViewModel> selection)
@@ -314,7 +314,7 @@ public sealed partial class ArchiveViewModel : ObservableObject, IDisposable
             DetailsTitle = DisplayName;
             DetailsIcon = ShellIcons.GetIconForPath(FilePath);
             var (size, packed, files, folders) = _session.Root.Measure();
-            Details.Add(new("Contents", $"{files:N0} files, {folders:N0} folders"));
+            Details.Add(new("Contents", $"{PropertyFormatter.FormatCount(files, "file")}, {PropertyFormatter.FormatCount(folders, "folder")}"));
             Details.Add(new("Total size", PropertyFormatter.FormatSizeExact(size)));
             if (info.PhysicalSize is { } phys)
             {
@@ -339,7 +339,7 @@ public sealed partial class ArchiveViewModel : ObservableObject, IDisposable
             {
                 var m = item.Folder!.Measure();
                 Details.Add(new("Type", item.TypeName));
-                Details.Add(new("Contains", $"{m.Files:N0} files, {m.Folders:N0} folders"));
+                Details.Add(new("Contains", $"{PropertyFormatter.FormatCount(m.Files, "file")}, {PropertyFormatter.FormatCount(m.Folders, "folder")}"));
                 Details.Add(new("Size", PropertyFormatter.FormatSizeExact(m.Size)));
                 if (m.Packed > 0)
                     Details.Add(new("Packed size", PropertyFormatter.FormatSizeExact(m.Packed)));
@@ -400,7 +400,7 @@ public sealed partial class ArchiveViewModel : ObservableObject, IDisposable
         try
         {
             var result = await _host.Operations.RunAsync(op, ctx => ExtractEngine.Extract(session, indices, options, ctx),
-                r => r.Errors == 0 ? $"Extracted {r.FilesProcessed:N0} files to {r.Destination}" : $"{r.Errors} errors · {r.FilesProcessed:N0} files",
+                r => r.Errors == 0 ? $"Extracted {PropertyFormatter.FormatCount(r.FilesProcessed, "file")} to {r.Destination}" : $"{PropertyFormatter.FormatCount(r.Errors, "error")} · {PropertyFormatter.FormatCount(r.FilesProcessed, "file")}",
                 r => r.Destination);
             if (result is null)
                 return null;
@@ -473,7 +473,7 @@ public sealed partial class ArchiveViewModel : ObservableObject, IDisposable
             new UiPrompts(_host.Dialogs, Parent is null ? FilePath : null));
         var result = await _host.Operations.RunAsync(op,
             ctx => ExtractEngine.Extract(session, indices, new ExtractOptions { Destination = temp, BasePath = basePath, Overwrite = OverwriteMode.Overwrite, ZonePropagation = ZonePropagation.All }, ctx),
-            r => $"{r.FilesProcessed} files");
+            r => PropertyFormatter.FormatCount(r.FilesProcessed, "file"));
         if (result is null || (result.Errors > 0 && !quiet))
         {
             if (result is not null)
@@ -558,13 +558,13 @@ public sealed partial class ArchiveViewModel : ObservableObject, IDisposable
         try
         {
             var result = await _host.Operations.RunAsync(op, ctx => ExtractEngine.Test(session, null, ctx),
-                r => r.Errors == 0 ? $"No errors · {r.FilesProcessed:N0} files tested" : $"{r.Errors} errors found");
+                r => r.Errors == 0 ? $"No errors · {PropertyFormatter.FormatCount(r.FilesProcessed, "file")} tested" : $"{PropertyFormatter.FormatCount(r.Errors, "error")} found");
             if (result is null)
                 return;
             if (result.Errors == 0)
-                await _host.Dialogs.ShowErrorAsync("Test passed", $"There are no errors in {DisplayName}.\n\n{result.FilesProcessed:N0} files, {PropertyFormatter.FormatSize(result.Bytes)} verified.");
+                await _host.Dialogs.ShowErrorAsync("Test passed", $"There are no errors in {DisplayName}.\n\n{PropertyFormatter.FormatCount(result.FilesProcessed, "file")}, {PropertyFormatter.FormatSize(result.Bytes)} verified.");
             else
-                await _host.Dialogs.ShowMessagesAsync($"{result.Errors} errors in {DisplayName}", op.Messages);
+                await _host.Dialogs.ShowMessagesAsync($"{PropertyFormatter.FormatCount(result.Errors, "error")} in {DisplayName}", op.Messages);
         }
         catch (Exception ex)
         {
@@ -589,7 +589,7 @@ public sealed partial class ArchiveViewModel : ObservableObject, IDisposable
                 return;
         }
         var (indices, _) = Resolve(items);
-        await UpdateAsync(new UpdatePlan { Delete = indices ?? [] }, $"Deleting {items.Count} items");
+        await UpdateAsync(new UpdatePlan { Delete = indices ?? [] }, items.Count == 1 ? $"Deleting {items[0].Name}" : $"Deleting {items.Count} items");
     }
 
     public async Task RenameAsync(ItemViewModel item)

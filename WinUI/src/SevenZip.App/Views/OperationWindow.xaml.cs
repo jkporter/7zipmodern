@@ -185,7 +185,7 @@ public sealed partial class OperationWindow : Window, IWindowHost
             };
             return ExtractEngine.Extract(session, null, options, ctx);
         },
-        r => r.Errors == 0 ? $"Extracted {r.FilesProcessed:N0} files" : $"{r.Errors} errors",
+        r => r.Errors == 0 ? $"Extracted {PropertyFormatter.FormatCount(r.FilesProcessed, "file")}" : PropertyFormatter.FormatCount(r.Errors, "error"),
         r => r.Destination);
         End(op);
         if (result is null)
@@ -208,7 +208,7 @@ public sealed partial class OperationWindow : Window, IWindowHost
         {
             using var session = ArchiveSession.Open(archive, null, ctx);
             return ExtractEngine.Test(session, null, ctx);
-        }, r => r.Errors == 0 ? $"No errors · {r.FilesProcessed:N0} files" : $"{r.Errors} errors");
+        }, r => r.Errors == 0 ? $"No errors · {PropertyFormatter.FormatCount(r.FilesProcessed, "file")}" : PropertyFormatter.FormatCount(r.Errors, "error"));
         End(op);
         return result is not null;
     }
@@ -307,7 +307,7 @@ public sealed partial class OperationWindow : Window, IWindowHost
         bool cancelled = _messages.Any(m => m.Text == "Cancelled.");
 
         ResultBar.Severity = errors > 0 ? InfoBarSeverity.Error : warnings > 0 ? InfoBarSeverity.Warning : cancelled ? InfoBarSeverity.Informational : InfoBarSeverity.Success;
-        ResultBar.Title = errors > 0 ? $"Finished with {errors} error{(errors == 1 ? "" : "s")}"
+        ResultBar.Title = errors > 0 ? $"Finished with {PropertyFormatter.FormatCount(errors, "error")}"
             : cancelled ? "Cancelled"
             : _request.Verb == LaunchVerb.Test ? "No errors found"
             : _request.Verb == LaunchVerb.CompressShare ? "Ready to share"

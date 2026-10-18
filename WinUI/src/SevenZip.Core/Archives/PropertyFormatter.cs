@@ -22,6 +22,10 @@ public static class PropertyFormatter
 
     public static string FormatSizeExact(ulong bytes) => $"{FormatSize(bytes)} ({bytes:N0} bytes)";
 
+    /// <summary>"1 file", "2 files", "1,024 files". Pass <paramref name="plural"/> when it isn't singular + "s".</summary>
+    public static string FormatCount(long count, string singular, string? plural = null)
+        => $"{count:N0} {(count == 1 ? singular : plural ?? singular + "s")}";
+
     public static string FormatAttributes(uint attrib)
     {
         // High 16 bits may carry POSIX mode when bit 15 (FILE_ATTRIBUTE_UNIX_EXTENSION) is set.

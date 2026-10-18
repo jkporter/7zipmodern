@@ -115,7 +115,7 @@ public sealed partial class HashViewModel : ObservableObject
         {
             await host.Operations.RunAsync(op,
                 ctx => HashEngine.ComputeFiles(paths, algorithms, ctx, r => dispatcher.TryEnqueue(() => Results.Add(new FileHashViewModel(r)))),
-                r => $"{r.Count} files");
+                r => PropertyFormatter.FormatCount(r.Count, "file"));
             Verify();
         }
         catch (Exception ex)

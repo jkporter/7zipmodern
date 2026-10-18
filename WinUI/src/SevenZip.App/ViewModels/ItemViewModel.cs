@@ -34,7 +34,7 @@ public sealed class ItemViewModel
     /// <summary>Folder part of <see cref="Path"/>, shown in search results.</summary>
     public string Location { get; private init; } = "";
 
-    public string SizeText => IsFolder ? (ChildCount == 1 ? "1 item" : $"{ChildCount:N0} items") : PropertyFormatter.FormatSize(Size);
+    public string SizeText => IsFolder ? PropertyFormatter.FormatCount(ChildCount, "item") : PropertyFormatter.FormatSize(Size);
     public string PackedText => PackedSize is { } p && !IsFolder ? PropertyFormatter.FormatSize(p) : "";
     public string ModifiedText => Modified?.ToLocalTime().ToString("g", CultureInfo.CurrentCulture) ?? "";
     public string RatioText => !IsFolder && PackedSize is { } p && Size > 0 ? $"{Math.Min(999, 100.0 * p / Size):0}%" : "";

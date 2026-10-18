@@ -274,4 +274,15 @@ public class EngineTests
         Assert.True(pass.CompressMBps > 0 && pass.DecompressMBps > 0);
         Assert.InRange(pass.Ratio, 0.05, 0.9);
     }
+
+    [Fact]
+    public void FormatCount_UsesSingularOnlyForOne()
+    {
+        Assert.Equal("0 files", PropertyFormatter.FormatCount(0, "file"));
+        Assert.Equal("1 file", PropertyFormatter.FormatCount(1, "file"));
+        Assert.Equal("2 folders", PropertyFormatter.FormatCount(2, "folder"));
+        Assert.Equal("1 entry", PropertyFormatter.FormatCount(1, "entry", "entries"));
+        Assert.Equal("3 entries", PropertyFormatter.FormatCount(3, "entry", "entries"));
+        Assert.Equal($"{1234:N0} items", PropertyFormatter.FormatCount(1234, "item"));
+    }
 }

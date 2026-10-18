@@ -115,7 +115,7 @@ public sealed partial class OperationViewModel : ObservableObject
         if (Kind is OperationKind.Compress or OperationKind.Update && p.Ratio is { } ratio)
             parts.Add($"ratio {ratio:P0}");
         if (p.TotalFiles > 1)
-            parts.Add($"{p.CompletedFiles:N0} / {p.TotalFiles:N0} files");
+            parts.Add($"{p.CompletedFiles:N0} / {PropertyFormatter.FormatCount((long)p.TotalFiles, "file")}");
         Stats = string.Join(" · ", parts);
         ProgressChanged?.Invoke(this, EventArgs.Empty);
     }
