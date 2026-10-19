@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="0,1,0,0">
+        <ScrollViewer>
+            <StackPanel MaxWidth="{StaticResource PageMaxWidth}" Padding="{StaticResource PagePadding}" Spacing="{StaticResource SettingsCardSpacing}">
+                <TextBlock Margin="0,0,0,12" Style="{StaticResource PageTitleStyle}" Text="Benchmark" />
+
+                <ContentControl Style="{StaticResource SettingsCardStyle}" AutomationProperties.Name="Dictionary size" Tag="&#xE9F5;">
+                    <ComboBox x:Name="DictionaryBox" MinWidth="160" AutomationProperties.Name="Dictionary size" SelectedIndex="{Binding DictionaryIndex, Mode=TwoWay}" IsEnabled="{Binding IsRunning, Converter={StaticResource Not}}" />
+                </ContentControl>
+                <ContentControl Style="{StaticResource SettingsCardStyle}" AutomationProperties.Name="CPU threads" Tag="&#xE950;">
+                    <Slider Width="220" AutomationProperties.Name="CPU threads" Minimum="1" Maximum="{Binding MaxThreads}" StepFrequency="1" Value="{Binding Threads, Mode=TwoWay}" IsEnabled="{Binding IsRunning, Converter={StaticResource Not}}" />
+                </ContentControl>
+
+                <Grid Margin="0,12,0,0" ColumnSpacing="12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Padding="16" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="{StaticResource OverlayCornerRadius}" Spacing="4">
+                        <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Compressing" />
+                        <TextBlock Style="{StaticResource TitleLargeTextBlockStyle}" Text="{Binding CompressSpeed}" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Padding="16" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="{StaticResource OverlayCornerRadius}" Spacing="4">
+                        <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Decompressing" />
+                        <TextBlock Style="{StaticResource TitleLargeTextBlockStyle}" Text="{Binding DecompressSpeed}" />
+                    </StackPanel>
+                </Grid>
+
+                <TextBlock Margin="0,8" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{Binding AverageText}" TextWrapping="Wrap" />
+                <InfoBar IsClosable="False" IsOpen="{Binding HasError}" Message="{Binding Error}" Severity="Error" />
+
+                <Button x:Name="StartButton" MinWidth="120" Content="Start" Style="{StaticResource AccentButtonStyle}" />
+
+                <ItemsControl x:Name="PassesList" Margin="0,12,0,0">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Padding="0,6" ColumnSpacing="12" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,0,0,1">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="80" />
+                                    <ColumnDefinition />
+                                    <ColumnDefinition />
+                                    <ColumnDefinition />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{Binding PassLabel}" />
+                                <TextBlock Grid.Column="1" Text="{Binding CompressText}" />
+                                <TextBlock Grid.Column="2" Text="{Binding DecompressText}" />
+                                <TextBlock Grid.Column="3" Text="{Binding RatioText}" />
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

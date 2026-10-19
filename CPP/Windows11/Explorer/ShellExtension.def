@@ -1,0 +1,7 @@
+; ShellExtension.def
+
+LIBRARY "SevenZip.ShellExtension.dll"
+
+EXPORTS
+  DllGetClassObject PRIVATE
+  DllCanUnloadNow PRIVATE

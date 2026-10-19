@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    AllowDrop="True">
+
+    <Grid Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="0,1,0,0">
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup>
+                <VisualState x:Name="WideState">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="1008" />
+                    </VisualState.StateTriggers>
+                </VisualState>
+                <VisualState x:Name="NarrowState">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="0" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="TilesSecondColumn.Width" Value="0" />
+                        <Setter Target="Tiles.ColumnSpacing" Value="0" />
+                        <Setter Target="Tiles.RowSpacing" Value="12" />
+                        <Setter Target="SecondTilePair.(Grid.Column)" Value="0" />
+                        <Setter Target="SecondTilePair.(Grid.Row)" Value="1" />
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+        <ScrollViewer>
+            <StackPanel MaxWidth="{StaticResource PageMaxWidth}" Padding="{StaticResource PagePadding}">
+                <Grid Margin="0,8,0,4" ColumnSpacing="16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Image Width="48" Height="48" AutomationProperties.AccessibilityView="Raw" Source="ms-appx:///Assets/Square44x44Logo.targetsize-48.png" />
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock Style="{StaticResource PageTitleStyle}" Text="7-Zip" />
+                        <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Open, create and verify archives — 7z, ZIP, RAR, TAR, ISO and 50 more formats." TextWrapping="Wrap" />
+                    </StackPanel>
+                </Grid>
+
+                <!-- Four tiles in a row on wide windows; two rows of two below the 1008 epx breakpoint. -->
+                <Grid x:Name="Tiles" Margin="0,24,0,0" ColumnSpacing="12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition x:Name="TilesSecondColumn" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+                        <Button x:Name="OpenButton" Style="{StaticResource ActionTileStyle}" AutomationProperties.Name="Open archive">
+                            <StackPanel Spacing="8">
+                                <FontIcon HorizontalAlignment="Left" FontSize="24" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" Glyph="&#xE8E5;" />
+                                <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="Open archive" />
+                                <TextBlock Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Browse, extract and edit · Ctrl+O" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Button>
+                        <Button x:Name="CompressButton" Grid.Column="1" Style="{StaticResource ActionTileStyle}" AutomationProperties.Name="Create archive">
+                            <StackPanel Spacing="8">
+                                <FontIcon HorizontalAlignment="Left" FontSize="24" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" Glyph="&#xF012;" />
+                                <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="Create archive" />
+                                <TextBlock Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Compress and encrypt files · Ctrl+N" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+                    <Grid x:Name="SecondTilePair" Grid.Column="1" ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+                        <Button x:Name="HashButton" Style="{StaticResource ActionTileStyle}" AutomationProperties.Name="Verify checksums">
+                            <StackPanel Spacing="8">
+                                <FontIcon HorizontalAlignment="Left" FontSize="24" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" Glyph="&#xE73E;" />
+                                <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="Verify checksums" />
+                                <TextBlock Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="SHA-256, CRC32, BLAKE2 and more" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Button>
+                        <Button x:Name="BenchmarkButton" Grid.Column="1" Style="{StaticResource ActionTileStyle}" AutomationProperties.Name="Benchmark">
+                            <StackPanel Spacing="8">
+                                <FontIcon HorizontalAlignment="Left" FontSize="24" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" Glyph="&#xEC4A;" />
+                                <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="Benchmark" />
+                                <TextBlock Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Measure compression speed" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+                </Grid>
+
+                <Border
+                    x:Name="DropZone"
+                    Margin="0,12,0,0"
+                    Padding="24"
+                    BorderBrush="{ThemeResource ControlStrongStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="{StaticResource OverlayCornerRadius}">
+                    <StackPanel HorizontalAlignment="Center" Orientation="Horizontal" Spacing="12">
+                        <FontIcon FontSize="20" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Glyph="&#xE896;" />
+                        <TextBlock x:Name="DropText" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Drop archives here to open them, or other files to compress them" TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+
+                <Grid Margin="0,28,0,8">
+                    <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" AutomationProperties.HeadingLevel="Level2" Text="Recent" VerticalAlignment="Center" />
+                    <HyperlinkButton x:Name="ClearRecentButton" HorizontalAlignment="Right" Content="Clear list" />
+                </Grid>
+                <TextBlock x:Name="EmptyRecentText" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Archives you open appear here and in the taskbar jump list." Visibility="Collapsed" />
+                <ListView
+                    x:Name="RecentList"
+                    IsItemClickEnabled="True"
+                    SelectionMode="None">
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Padding="0,8" ColumnSpacing="12" Background="Transparent" AutomationProperties.Name="{Binding Name}">
+                                <Grid.ContextFlyout>
+                                    <MenuFlyout>
+                                        <MenuFlyoutItem Command="{Binding ShowInFolderCommand}" Text="Show in folder">
+                                            <MenuFlyoutItem.Icon>
+                                                <FontIcon Glyph="&#xED25;" />
+                                            </MenuFlyoutItem.Icon>
+                                        </MenuFlyoutItem>
+                                        <MenuFlyoutItem Command="{Binding RemoveCommand}" Text="Remove from list">
+                                            <MenuFlyoutItem.Icon>
+                                                <FontIcon Glyph="&#xE711;" />
+                                            </MenuFlyoutItem.Icon>
+                                        </MenuFlyoutItem>
+                                    </MenuFlyout>
+                                </Grid.ContextFlyout>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <Image Width="24" Height="24" Source="{Binding Icon}" />
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Style="{ThemeResource ListCaptionTextStyle}" Text="{Binding Folder}" />
+                                </StackPanel>
+                                <TextBlock Grid.Column="2" VerticalAlignment="Center" Style="{ThemeResource ListCaptionTextStyle}" Text="{Binding When}" />
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>
