@@ -587,6 +587,53 @@ static void HashesMatchKnownVectors()
   CHECK(hasBlake)
 }
 
+// A program that keeps a file open with DELETE access (to rename or delete it later)
+// must not stop 7-Zip from opening, compressing or hashing that file.
+static void FilesHeldWithDeleteAccessCanBeRead()
+{
+  CTempDir t;
+  const FString src = MakeSourceTree(t);
+  const FString archive = Combine(t.Path(), "held.7z");
+  UString errorMessage;
+  CCompressionSettings settings;
+  settings.Format = "7z";
+  CCompressResult result;
+  {
+    COperationContext ctx;
+    CHECK_HR(NArchiveWriter::Create(archive, OneSource(src), settings, ctx, result, errorMessage))
+  }
+
+  const HANDLE held = ::CreateFileW(fs2us(archive), GENERIC_READ | DELETE,
+      FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, 0, NULL);
+  CHECK(held != INVALID_HANDLE_VALUE)
+  bool opened = false, compressed = false, hashed = false;
+  {
+    CArchiveSession session;
+    COperationContext ctx;
+    opened = (session.Open(archive, CArchiveOpenOptions(), ctx, errorMessage) == S_OK);
+  }
+  {
+    CCompressionSettings zip;
+    zip.Format = "zip";
+    CCompressResult r2;
+    COperationContext ctx;
+    compressed = (NArchiveWriter::Create(Combine(t.Path(), "copy.zip"), OneSource(archive),
+        zip, ctx, r2, errorMessage) == S_OK && r2.Files == 1);
+  }
+  {
+    CObjectVector<CHashAlgorithmInfo> algorithms;
+    algorithms.Add(*NHashEngine::Find(UString("CRC32")));
+    CObjectVector<CFileHashResult> hashes;
+    COperationContext ctx;
+    hashed = (NHashEngine::ComputeFiles(OneSource(archive), algorithms, ctx, hashes, NULL, errorMessage) == S_OK
+        && hashes.Size() == 1 && hashes[0].Error.IsEmpty());
+  }
+  ::CloseHandle(held);
+  CHECK(opened)
+  CHECK(compressed)
+  CHECK(hashed)
+}
+
 static void SmartDestinationAvoidsDoubleFolders()
 {
   CTempDir t;
@@ -665,6 +712,7 @@ static const CTest kTests[] =
   { "OverwritePromptsAndKeepBoth", OverwritePromptsAndKeepBoth, NULL },
   { "ZoneIdentifierPropagates", ZoneIdentifierPropagates, NULL },
   { "HashesMatchKnownVectors", HashesMatchKnownVectors, NULL },
+  { "FilesHeldWithDeleteAccessCanBeRead", FilesHeldWithDeleteAccessCanBeRead, NULL },
   { "SmartDestinationAvoidsDoubleFolders", SmartDestinationAvoidsDoubleFolders, NULL },
   { "BenchmarkRoundTrips", BenchmarkRoundTrips, NULL },
   { "FormatCount_UsesSingularOnlyForOne", FormatCount_UsesSingularOnlyForOne, NULL }

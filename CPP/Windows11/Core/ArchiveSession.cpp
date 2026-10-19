@@ -17,6 +17,7 @@
 #include "OpenCallback.h"
 #include "PathSanitizer.h"
 #include "SevenZipEngine.h"
+#include "SharedInFileStream.h"
 
 using namespace NWindows;
 using namespace NFile;
@@ -194,9 +195,9 @@ HRESULT CArchiveSession::Open(const FString &path, const CArchiveOpenOptions &op
     }
   }
 
-  CInFileStream *fileSpec = new CInFileStream;
+  CSharedInFileStream *fileSpec = new CSharedInFileStream;
   CMyComPtr<IInStream> stream = fileSpec;
-  if (!fileSpec->OpenShared(fullPath, true))
+  if (!fileSpec->Open(fullPath))
   {
     const HRESULT res = GetLastError_noZero_HRESULT();
     errorMessage = "Cannot open '";

@@ -52,6 +52,7 @@ CORE_OBJS = \
   $O\PathSanitizer.obj \
   $O\PropertyFormatter.obj \
   $O\SevenZipEngine.obj \
+  $O\SharedInFileStream.obj \
   $O\UpdateCallback.obj \
 
 COMMON_OBJS = \
@@ -132,7 +133,8 @@ msix: $(MSIX_FILE)
 
 $(MSIX_FILE): $(PROGPATH) $(SHELL_EXT_DLL) Package.appxmanifest
 	if exist "$(MSIX_DIR)" rmdir /S /Q "$(MSIX_DIR)"
-	mkdir "$(MSIX_DIR)\Assets"
+	rem "if" makes nmake use cmd's mkdir, not a mkdir.exe on the PATH (Git's, on CI runners)
+	if not exist "$(MSIX_DIR)\Assets" mkdir "$(MSIX_DIR)\Assets"
 	copy /Y $(PROGPATH) "$(MSIX_DIR)\" >nul
 	copy /Y $O\7z.dll "$(MSIX_DIR)\" >nul
 	copy /Y $O\Microsoft.WindowsAppRuntime.Bootstrap.dll "$(MSIX_DIR)\" >nul

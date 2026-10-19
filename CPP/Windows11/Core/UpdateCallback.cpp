@@ -15,6 +15,7 @@
 #include "../../7zip/Common/StreamObjects.h"
 
 #include "ArchiveSession.h"
+#include "SharedInFileStream.h"
 
 using namespace NWindows;
 
@@ -164,9 +165,9 @@ Z7_COM7F_IMF(CUpdateCallback::GetStream(UInt32 index, ISequentialInStream **inSt
     return S_OK;
   }
 
-  CInFileStream *spec = new CInFileStream;
+  CSharedInFileStream *spec = new CSharedInFileStream;
   CMyComPtr<ISequentialInStream> stream = spec;
-  if (!spec->OpenShared(item.SourcePath, true))
+  if (!spec->Open(item.SourcePath))
   {
     // S_FALSE tells the handler to skip this file (7-Zip's "cannot open file" warning).
     const DWORD error = ::GetLastError();

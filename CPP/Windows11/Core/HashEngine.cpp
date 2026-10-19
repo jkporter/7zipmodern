@@ -20,6 +20,7 @@
 #include "PathSanitizer.h"
 #include "PropertyFormatter.h"
 #include "SevenZipEngine.h"
+#include "SharedInFileStream.h"
 
 using namespace NWindows;
 using namespace NFile;
@@ -258,7 +259,7 @@ HRESULT ComputeFiles(const FStringVector &paths, const CObjectVector<CHashAlgori
     result.RelativePath = file.Relative;
 
     NIO::CInFile in;
-    bool ok = in.OpenShared(file.Full, true);
+    bool ok = NSharedFile::OpenRead(in, file.Full);
     DWORD error = ok ? 0 : ::GetLastError();
     if (ok)
     {

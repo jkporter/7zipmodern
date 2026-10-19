@@ -13,6 +13,7 @@
 #include "../../7zip/Common/FileStreams.h"
 
 #include "PathSanitizer.h"
+#include "SharedInFileStream.h"
 
 using namespace NWindows;
 using namespace NFile;
@@ -75,9 +76,9 @@ Z7_COM7F_IMF(COpenCallback::GetStream(const wchar_t *name, IInStream **inStream)
   NFind::CFileInfo fi;
   if (!fi.Find(full) || fi.IsDir())
     return S_FALSE;
-  CInFileStream *spec = new CInFileStream;
+  CSharedInFileStream *spec = new CSharedInFileStream;
   CMyComPtr<IInStream> stream = spec;
-  if (!spec->OpenShared(full, true))
+  if (!spec->Open(full))
     return GetLastError_noZero_HRESULT();
   VolumePaths.Add(full);
   _currentName = volumeName;

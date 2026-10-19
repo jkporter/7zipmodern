@@ -19,6 +19,7 @@ CORE_OBJS = \
   $O\PathSanitizer.obj \
   $O\PropertyFormatter.obj \
   $O\SevenZipEngine.obj \
+  $O\SharedInFileStream.obj \
   $O\UpdateCallback.obj \
 
 COMMON_OBJS = \
