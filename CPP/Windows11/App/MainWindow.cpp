@@ -331,6 +331,7 @@ void CMainWindow::AddTab(const CTabPageRef &page, bool replaceHome, bool insertA
   tab.Page = page;
   tab.Item = TabViewItem();
   tab.Item.Header(BoxString(title));
+  tab.Item.HeaderTemplate(_tabView.Resources().Lookup(box_value(L"TabHeaderTemplate")).as<DataTemplate>());
   tab.Item.IconSource(page->GetTabIcon());
   tab.Item.Content(page->GetRoot());
   tab.Item.Tag(box_value(tab.Id));

@@ -17,6 +17,13 @@
         VerticalContentAlignment="Stretch">
         <TabView.Resources>
             <StaticResource x:Key="TabViewItemHeaderBackgroundSelected" ResourceKey="LayerFillColorDefaultBrush" />
+            <!-- The caption buttons are Tall (48 px, MainWindow.cpp): 8 px header padding + 40 px tabs make the strip
+                 as tall as they are, as in File Explorer. With the default 32 px tabs they hang below the strip. -->
+            <x:Double x:Key="TabViewItemMinHeight">40</x:Double>
+            <!-- Tabs stretch their content (for the page), which also stretches the header; this keeps its text centered. -->
+            <DataTemplate x:Key="TabHeaderTemplate">
+                <TextBlock VerticalAlignment="Center" Text="{Binding}" />
+            </DataTemplate>
         </TabView.Resources>
 
         <TabView.TabStripHeader>
