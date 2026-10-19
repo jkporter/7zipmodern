@@ -111,10 +111,22 @@ $O\Assets\7zip.ico: Assets\7zip.ico
 # MSIX package (unsigned):  nmake PLATFORM=x64 msix
 # Needs the shell extension (..\Explorer) built for the same platform, and
 # makepri / makeappx from the Windows SDK on the PATH (VS developer prompt).
+# Optional:
+#   MSIX_VERSION=26.4.0.0          package version (default: Package.appxmanifest)
+#   "MSIX_PUBLISHER=CN=Name, ..."  publisher; must match the signing certificate
 
 SHELL_EXT_DLL = ..\Explorer\$O\SevenZip.ShellExtension.dll
 MSIX_DIR = $O\msix
 MSIX_FILE = $O\SevenZip.msix
+
+# the package holds native binaries: stamp the architecture into <Identity>
+MSIX_STAMP = -replace '<Identity ', '<Identity ProcessorArchitecture=\"$(PLATFORM)\" '
+!IFDEF MSIX_VERSION
+MSIX_STAMP = $(MSIX_STAMP) -creplace '\bVersion=\"[0-9.]*\"', 'Version=\"$(MSIX_VERSION)\"'
+!ENDIF
+!IFDEF MSIX_PUBLISHER
+MSIX_STAMP = $(MSIX_STAMP) -creplace '\bPublisher=\".*?\"', 'Publisher=\"$(MSIX_PUBLISHER)\"'
+!ENDIF
 
 msix: $(MSIX_FILE)
 
@@ -127,8 +139,8 @@ $(MSIX_FILE): $(PROGPATH) $(SHELL_EXT_DLL) Package.appxmanifest
 	copy /Y $(SHELL_EXT_DLL) "$(MSIX_DIR)\" >nul
 	copy /Y Assets\*.png "$(MSIX_DIR)\Assets\" >nul
 	copy /Y Assets\7zip.ico "$(MSIX_DIR)\Assets\" >nul
-	rem the package holds native binaries: stamp the architecture into <Identity>
-	powershell -NoProfile -Command "(Get-Content -Raw 'Package.appxmanifest') -replace '<Identity ', '<Identity ProcessorArchitecture=\"$(PLATFORM)\" ' | Set-Content -Encoding utf8 '$(MSIX_DIR)\AppxManifest.xml'"
+	copy /Y ..\..\..\DOC\License.txt "$(MSIX_DIR)\" >nul
+	powershell -NoProfile -Command "(Get-Content -Raw 'Package.appxmanifest') $(MSIX_STAMP) | Set-Content -Encoding utf8 '$(MSIX_DIR)\AppxManifest.xml'"
 	makepri createconfig /cf "$O\priconfig.xml" /dq en-US /pv 10.0.0 /o
 	rem one resources.pri for the flat package: drop the resource-pack split (<packaging>)
 	powershell -NoProfile -Command "(Get-Content '$O\priconfig.xml') -notmatch 'packaging>|autoResourcePackage' | Set-Content '$O\priconfig.xml'"

@@ -74,6 +74,28 @@ Command line (also how the Explorer extension talks to the app):
 `SevenZip [open|extract|extract-here|extract-smart|test|compress|compress-7z|compress-zip|compress-share|hash|benchmark|settings] [--format NAME] [--algorithm NAME] paths… | @listfile`.
 In the MSIX build the same commands are available as `7zw`.
 
+`nmake msix` also takes `MSIX_VERSION=26.4.0.0` and `"MSIX_PUBLISHER=CN=..."` (the publisher must match the
+signing certificate). `.github/scripts/Build-Windows11.ps1 -Arch x64|arm64` does the whole build, test and
+packaging from any prompt and writes `out\7z2604-win11-<arch>.msix` and `.zip`.
+
+## Releases (GitHub Actions)
+
+Releases follow the ones on [7-zip.org](https://www.7-zip.org/download.html), with the same version, tag
+(`26.04`) and file naming (`7z2604-x64.exe` there, `7z2604-win11-x64.msix` here):
+
+- `.github/workflows/windows11-upstream.yml` checks the download page daily. When a newer stable 7-Zip is listed,
+  it imports that release's `7zXXXX-src.tar.xz` over `Asm/`, `C/`, `CPP/` and `DOC/` (keeping `CPP/Windows11`),
+  opens an "Update to 7-Zip XX.YY" pull request and builds it. Enable *Settings > Actions > General > Allow
+  GitHub Actions to create and approve pull requests*.
+- `.github/workflows/windows11-release.yml` builds and tests x64 and arm64 on every pull request and push. On the
+  default branch, when no release exists yet for the version in `C/7zVersion.h` (so after the update pull
+  request is merged), it publishes the MSIX packages, the unpackaged zips and `SHA256SUMS.txt`. Run it manually
+  with a revision to re-release the same version (`26.04-r1`, MSIX version `26.4.1.0`).
+- Signing is optional: secrets `MSIX_CERTIFICATE` (base64 `.pfx`) and `MSIX_CERTIFICATE_PASSWORD`, and variable
+  `MSIX_PUBLISHER` if it differs from the certificate subject. Without them the packages are unsigned. Variable
+  `ARM64_RUNNER` (default `windows-11-arm`) can be set to `windows-latest` to cross-compile arm64 without
+  running its tests.
+
 ## What changed, feature by feature
 
 | Classic 7-Zip | Windows 11 app |
