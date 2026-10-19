@@ -50,7 +50,9 @@ Requirements: Visual Studio 2022/2026 with the C++ desktop workload, and these N
 package folder (`%USERPROFILE%\.nuget\packages`, or set `NUGET_PACKAGES`): `Microsoft.WindowsAppSDK` 2.5.1
 (with its dependencies, including `Microsoft.Web.WebView2`) and `Microsoft.Windows.CppWinRT` 3.0.260520.1.
 They are used in place, like the Windows SDK; nothing is copied into the tree. Running unpackaged needs the
-Windows App Runtime 2.5.
+Windows App Runtime 2.5. For ARM64, the assembler code of `7z.dll` needs `clang-cl` (Visual Studio's "C++ Clang
+tools for Windows" component). Without it, the makefile builds `7z.dll` with 7-Zip's `NO_ASM_GNU=1`, which uses C
+code for the LZMA decoder (same results, slower decompression).
 
 From a Visual Studio developer command prompt:
 
@@ -113,16 +115,17 @@ In the MSIX build the same commands are available as `7zw`.
 
 ## Status
 
-Verified on this machine (Windows 11 26200, x64), C++ build:
-- `nmake PLATFORM=x64` in `CPP/Windows11` builds everything with zero warnings under 7-Zip's `-Wall -WX` flags.
-- 19 engine tests pass: 7z/zip/tar/tar.gz/tar.xz/tar.bz2/wim round-trips, encrypted headers, wrong-password detection, add/rename/delete in place, split volumes, path sanitising, overwrite "keep both", Mark-of-the-Web propagation, known hash vectors, a benchmark round-trip and count wording.
+Verified on this machine (Windows 11 26200, Snapdragon X Elite), C++ build:
+- `nmake PLATFORM=x64` and `nmake PLATFORM=arm64` in `CPP/Windows11` build everything with zero warnings under 7-Zip's `-Wall -WX` flags (arm64 without `clang-cl`, so with `NO_ASM_GNU=1`). The arm64 binaries run natively; the x64 ones were tested under emulation.
+- On both architectures, 19 engine tests pass: 7z/zip/tar/tar.gz/tar.xz/tar.bz2/wim round-trips, encrypted headers, wrong-password detection, add/rename/delete in place, split volumes, path sanitising, overwrite "keep both", Mark-of-the-Web propagation, known hash vectors, a benchmark round-trip and count wording.
 - The unpackaged app launches. Home and Settings render, settings persist (and the C# app's `settings.json` still loads), and single-instance redirection works: a second launch opens its archive as a tab in the first window. The `test`, `extract`, `extract-here`, `extract-smart` (with the overwrite prompt), `compress-7z` and `compress-zip` verbs work end to end.
 - The XAML of the archive, extract, create-archive, checksum and benchmark pages loads and binds in a test harness.
 - The shell extension enumerates the same commands as the original for archive, folder and file selections in a test harness, launches the app with the same command lines, and releases all its objects.
-- `nmake msix` packs an unsigned MSIX.
+- The arm64 app passes the same checks: `compress-7z`, `compress-zip`, `test` ("No errors · 31 files"), `extract-smart` (byte-identical output), the main window, and redirection of `open` and `hash` from a second launch.
+- `nmake msix` packs an unsigned MSIX for x64 or arm64, with the matching `ProcessorArchitecture`.
 
 Not yet verified or not yet done:
 - **Installing the MSIX.** This needs Developer Mode or a trusted signing certificate, so the Windows 11 context menu inside real File Explorer, the file associations, the Share target, toasts, the jump list and the Windows Hello password vault have not been exercised end to end.
 - Interactive flows that need a person clicking: the password dialog, drag-out to Explorer, edit-and-update, copy/paste, and the Share sheet.
-- ARM64 build (`nmake PLATFORM=arm64` is supported by the makefiles but has not been run).
+- The ARM64 assembler build of `7z.dll` (needs `clang-cl`, not installed here).
 - Localization (all strings are English), column resizing, and an Explorer preview handler for archives.

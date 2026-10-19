@@ -17,7 +17,12 @@ namespace NSevenZipEngine {
 static NSynchronization::CCriticalSection g_CS;
 static NDLL::CLibrary g_Library;
 static FString g_LoadedPath;
-static volatile bool g_Loaded = false;
+// Set once, after everything it guards is ready. Read without the lock, so
+// the accesses must have acquire/release order: volatile alone doesn't give
+// that on ARM64 (/volatile:iso is the default there).
+static LONG g_Loaded = 0;
+
+static bool IsLoaded_Acquire() { return ::InterlockedCompareExchange(&g_Loaded, 0, 0) != 0; }
 
 static Func_CreateObject f_CreateObject;
 static Func_GetNumberOfFormats f_GetNumberOfFormats;
@@ -45,10 +50,10 @@ static bool Bind(HMODULE m)
 
 HRESULT EnsureLoaded(const FString &explicitPath, UString &errorMessage)
 {
-  if (g_Loaded)
+  if (IsLoaded_Acquire())
     return S_OK;
   NSynchronization::CCriticalSectionLock lock(g_CS);
-  if (g_Loaded)
+  if (IsLoaded_Acquire())
     return S_OK;
 
   FStringVector candidates;
@@ -70,7 +75,7 @@ HRESULT EnsureLoaded(const FString &explicitPath, UString &errorMessage)
       continue;
     g_Library.Attach(lib.Detach());
     g_LoadedPath = path;
-    g_Loaded = true;
+    ::InterlockedExchange(&g_Loaded, 1);
     return S_OK;
   }
   errorMessage = "The 7-Zip engine (7z.dll) was not found next to the application.";
@@ -85,7 +90,7 @@ HRESULT EnsureLoaded()
 
 bool IsLoaded()
 {
-  return g_Loaded;
+  return IsLoaded_Acquire();
 }
 
 FString GetLoadedPath()

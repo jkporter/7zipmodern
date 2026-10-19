@@ -72,7 +72,12 @@ namespace NFormatRegistry {
 
 static NSynchronization::CCriticalSection g_CS;
 static CObjectVector<CArchiveFormat> g_Formats;
-static volatile bool g_Loaded = false;
+// Set once, after everything it guards is ready. Read without the lock, so
+// the accesses must have acquire/release order: volatile alone doesn't give
+// that on ARM64 (/volatile:iso is the default there).
+static LONG g_Loaded = 0;
+
+static bool IsLoaded_Acquire() { return ::InterlockedCompareExchange(&g_Loaded, 0, 0) != 0; }
 
 static void SplitExtensions(const UString &s, UStringVector &dest)
 {
@@ -185,7 +190,7 @@ static HRESULT LoadFormats()
 HRESULT Load(UString &errorMessage)
 {
   NSynchronization::CCriticalSectionLock lock(g_CS);
-  if (g_Loaded)
+  if (IsLoaded_Acquire())
     return S_OK;
   const HRESULT res = NSevenZipEngine::EnsureLoaded(FString(), errorMessage);
   if (res != S_OK)
@@ -198,13 +203,13 @@ HRESULT Load(UString &errorMessage)
     g_Formats.Clear();
     return res2;
   }
-  g_Loaded = true;
+  ::InterlockedExchange(&g_Loaded, 1);
   return S_OK;
 }
 
 const CObjectVector<CArchiveFormat> &All()
 {
-  if (!g_Loaded)
+  if (!IsLoaded_Acquire())
   {
     UString errorMessage;
     Load(errorMessage);

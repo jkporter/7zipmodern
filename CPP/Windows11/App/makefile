@@ -127,7 +127,8 @@ $(MSIX_FILE): $(PROGPATH) $(SHELL_EXT_DLL) Package.appxmanifest
 	copy /Y $(SHELL_EXT_DLL) "$(MSIX_DIR)\" >nul
 	copy /Y Assets\*.png "$(MSIX_DIR)\Assets\" >nul
 	copy /Y Assets\7zip.ico "$(MSIX_DIR)\Assets\" >nul
-	copy /Y Package.appxmanifest "$(MSIX_DIR)\AppxManifest.xml" >nul
+	rem the package holds native binaries: stamp the architecture into <Identity>
+	powershell -NoProfile -Command "(Get-Content -Raw 'Package.appxmanifest') -replace '<Identity ', '<Identity ProcessorArchitecture=\"$(PLATFORM)\" ' | Set-Content -Encoding utf8 '$(MSIX_DIR)\AppxManifest.xml'"
 	makepri createconfig /cf "$O\priconfig.xml" /dq en-US /pv 10.0.0 /o
 	rem one resources.pri for the flat package: drop the resource-pack split (<packaging>)
 	powershell -NoProfile -Command "(Get-Content '$O\priconfig.xml') -notmatch 'packaging>|autoResourcePackage' | Set-Content '$O\priconfig.xml'"
