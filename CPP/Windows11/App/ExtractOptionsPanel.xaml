@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Extract options (CExtractOptionsPanel). DataContext = CExtractOptionsModel. -->
+<UserControl
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <StackPanel MinWidth="440" MaxWidth="560" Spacing="14">
+        <Grid ColumnSpacing="8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBox Header="Destination" Text="{Binding Destination, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+            <Button x:Name="BrowseButton" Grid.Column="1" VerticalAlignment="Bottom" Content="Browse…" />
+        </Grid>
+
+        <CheckBox Content="{Binding SubfolderLabel}" IsChecked="{Binding CreateSubfolder, Mode=TwoWay}" />
+
+        <PasswordBox
+            Header="Password"
+            Password="{Binding Password, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+            PasswordRevealMode="Peek"
+            PlaceholderText="Required for encrypted files"
+            Visibility="{Binding NeedsPassword, Converter={StaticResource VisibleIf}}" />
+
+        <Grid ColumnSpacing="12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+            <ComboBox HorizontalAlignment="Stretch" Header="When a file already exists" SelectedIndex="{Binding OverwriteIndex, Mode=TwoWay}">
+                <ComboBoxItem Content="Ask me" />
+                <ComboBoxItem Content="Replace it" />
+                <ComboBoxItem Content="Skip it" />
+                <ComboBoxItem Content="Keep both" />
+                <ComboBoxItem Content="Rename the existing file" />
+            </ComboBox>
+            <ComboBox Grid.Column="1" HorizontalAlignment="Stretch" Header="Folders" SelectedIndex="{Binding PathModeIndex, Mode=TwoWay}">
+                <ComboBoxItem Content="Keep folder structure" />
+                <ComboBoxItem Content="Put all files in one folder" />
+            </ComboBox>
+        </Grid>
+
+        <CheckBox Content="Show the files in File Explorer when done" IsChecked="{Binding OpenFolderWhenDone, Mode=TwoWay}" />
+
+        <Expander HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Header="More options">
+            <StackPanel Spacing="12">
+                <ComboBox HorizontalAlignment="Stretch" Header="Mark of the Web (security zone from the download)" SelectedIndex="{Binding ZoneIndex, Mode=TwoWay}">
+                    <ComboBoxItem Content="Don't apply" />
+                    <ComboBoxItem Content="Apply to all extracted files (recommended)" />
+                    <ComboBoxItem Content="Apply to Office documents only" />
+                </ComboBox>
+                <CheckBox Content="Restore file dates" IsChecked="{Binding RestoreTimestamps, Mode=TwoWay}" />
+                <CheckBox Content="Restore symbolic links (only inside the destination)" IsChecked="{Binding RestoreSymbolicLinks, Mode=TwoWay}" />
+            </StackPanel>
+        </Expander>
+
+        <InfoBar x:Name="ErrorBar" IsClosable="False" Severity="Error" />
+    </StackPanel>
+</UserControl>

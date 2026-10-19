@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- DataContext: CSettingsPage (SettingsPage.cpp). Cards: Control/SettingsCard.h. -->
+<UserControl
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="0,1,0,0">
+        <ScrollViewer>
+            <StackPanel MaxWidth="{StaticResource PageMaxWidth}" Padding="{StaticResource PagePadding}" Spacing="{StaticResource SettingsCardSpacing}">
+                <TextBlock Margin="0,0,0,8" Style="{StaticResource PageTitleStyle}" Text="Settings" />
+
+                <!-- Appearance -->
+                <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="Appearance" />
+                <ContentControl Style="{StaticResource SettingsCardStyle}" AutomationProperties.Name="App theme" Tag="&#xE790;">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <HyperlinkButton VerticalAlignment="Center" Content="Windows color settings" NavigateUri="ms-settings:colors" />
+                        <ComboBox MinWidth="200" SelectedIndex="{Binding ThemeIndex, Mode=TwoWay}">
+                            <ComboBoxItem Content="Use system setting" />
+                            <ComboBoxItem Content="Light" />
+                            <ComboBoxItem Content="Dark" />
+                        </ComboBox>
+                    </StackPanel>
+                </ContentControl>
+                <ContentControl Style="{StaticResource SettingsCardStyle}" AutomationProperties.Name="Window material" AutomationProperties.HelpText="Mica Alt is recommended for windows with tabs." Tag="&#xE771;">
+                    <ComboBox MinWidth="200" SelectedIndex="{Binding BackdropIndex, Mode=TwoWay}">
+                        <ComboBoxItem Content="Mica" />
+                        <ComboBoxItem Content="Mica Alt" />
+                        <ComboBoxItem Content="Acrylic" />
+                    </ComboBox>
+                </ContentControl>
+
+                <!-- Extracting -->
+                <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="Extracting" />
+                <ContentControl Style="{StaticResource SettingsCardStyle}" AutomationProperties.Name="Smart extraction folder" AutomationProperties.HelpText="Creates a folder named after the archive only when the archive doesn't already have a single top-level folder." Tag="&#xE8F4;">
+                    <ToggleSwitch IsOn="{Binding SmartExtractFolder, Mode=TwoWay}" />
+                </ContentControl>
+                <ContentControl Style="{StaticResource SettingsCardStyle}" AutomationProperties.Name="Show extracted files in File Explorer" Tag="&#xED25;">
+                    <ToggleSwitch IsOn="{Binding OpenFolderAfterExtract, Mode=TwoWay}" />
+                </ContentControl>
+                <ContentControl Style="{StaticResource SettingsCardStyle}" AutomationProperties.Name="When a file already exists" Tag="&#xE8C8;">
+                    <ComboBox MinWidth="200" SelectedIndex="{Binding OverwriteIndex, Mode=TwoWay}">
+                        <ComboBoxItem Content="Ask me" />
+                        <ComboBoxItem Content="Replace it" />
+                        <ComboBoxItem Content="Skip it" />
+                        <ComboBoxItem Content="Keep both" />
+                        <ComboBoxItem Content="Rename the existing file" />
+                    </ComboBox>
+                </ContentControl>
+                <ContentControl Style="{StaticResource SettingsCardStyle}" AutomationProperties.Name="Mark of the Web" AutomationProperties.HelpText="Files extracted from a downloaded archive keep its security zone, so SmartScreen and Office Protected View still protect you." Tag="&#xE83D;">
+                    <ComboBox MinWidth="200" SelectedIndex="{Binding ZoneIndex, Mode=TwoWay}">
+                        <ComboBoxItem Content="Off" />
+                        <ComboBoxItem Content="All files (recommended)" />
+                        <ComboBoxItem Content="Office documents only" />
+                    </ComboBox>
+                </ContentControl>
+                <ContentControl Style="{StaticResource SettingsCardStyle}" AutomationProperties.Name="Open tarballs in one step" AutomationProperties.HelpText="Opens .tar.gz, .tar.xz and similar files straight into the TAR inside." Tag="&#xE7B8;">
+                    <ToggleSwitch IsOn="{Binding AutoOpenTarballs, Mode=TwoWay}" />
+                </ContentControl>
+                <ContentControl Style="{StaticResource SettingsCardStyle}" AutomationProperties.Name="Restore symbolic links" AutomationProperties.HelpText="Links that would point outside the destination are always kept as plain files." Tag="&#xE71B;">
+                    <ToggleSwitch IsOn="{Binding RestoreSymbolicLinks, Mode=TwoWay}" />
+                </ContentControl>
+
+                <!-- Creating -->
+                <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="Creating archives" />
+                <ContentControl Style="{StaticResource SettingsCardStyle}" AutomationProperties.Name="Default format" Tag="&#xE7C3;">
+                    <ComboBox x:Name="FormatCombo" MinWidth="200" />
+                </ContentControl>
+                <ContentControl Style="{StaticResource SettingsCardStyle}" AutomationProperties.Name="Default compression level" Tag="&#xE9F5;">
+                    <ComboBox MinWidth="200" SelectedIndex="{Binding LevelIndex, Mode=TwoWay}">
+                        <ComboBoxItem Content="Store" />
+                        <ComboBoxItem Content="Fastest" />
+                        <ComboBoxItem Content="Fast" />
+                        <ComboBoxItem Content="Normal" />
+                        <ComboBoxItem Content="Maximum" />
+                        <ComboBoxItem Content="Ultra" />
+                    </ComboBox>
+                </ContentControl>
+                <ContentControl Style="{StaticResource SettingsCardStyle}" AutomationProperties.Name="Encrypt file names by default (7z)" Tag="&#xE72E;">
+                    <ToggleSwitch IsOn="{Binding DefaultEncryptFileNames, Mode=TwoWay}" />
+                </ContentControl>
+                <ContentControl Style="{StaticResource SettingsCardStyle}" AutomationProperties.Name="Efficiency mode for compression" AutomationProperties.HelpText="Runs long compressions with Windows 11 efficiency mode (EcoQoS) so the PC stays quiet and responsive. Takes longer." Tag="&#xEC0A;">
+                    <ToggleSwitch IsOn="{Binding EfficiencyModeForBackground, Mode=TwoWay}" />
+                </ContentControl>
+
+                <!-- Windows integration -->
+                <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="Windows integration" />
+                <Expander Style="{StaticResource SettingsExpanderStyle}">
+                    <Expander.Header>
+                        <ContentControl Style="{StaticResource SettingsExpanderHeaderStyle}" AutomationProperties.Name="Context menu" AutomationProperties.HelpText="Commands shown when you right-click files in File Explorer." Tag="&#xE8A7;" />
+                    </Expander.Header>
+                    <StackPanel>
+                        <ContentControl Style="{StaticResource SettingsExpanderItemStyle}" AutomationProperties.Name="Open archive"><ToggleSwitch IsOn="{Binding MenuOpen, Mode=TwoWay}" /></ContentControl>
+                        <ContentControl Style="{StaticResource SettingsExpanderItemStyle}" AutomationProperties.Name="Extract files&#x2026;"><ToggleSwitch IsOn="{Binding MenuExtract, Mode=TwoWay}" /></ContentControl>
+                        <ContentControl Style="{StaticResource SettingsExpanderItemStyle}" AutomationProperties.Name="Extract here"><ToggleSwitch IsOn="{Binding MenuExtractHere, Mode=TwoWay}" /></ContentControl>
+                        <ContentControl Style="{StaticResource SettingsExpanderItemStyle}" AutomationProperties.Name="Extract to folder"><ToggleSwitch IsOn="{Binding MenuExtractSmart, Mode=TwoWay}" /></ContentControl>
+                        <ContentControl Style="{StaticResource SettingsExpanderItemStyle}" AutomationProperties.Name="Test archive"><ToggleSwitch IsOn="{Binding MenuTest, Mode=TwoWay}" /></ContentControl>
+                        <ContentControl Style="{StaticResource SettingsExpanderItemStyle}" AutomationProperties.Name="Add to archive&#x2026;"><ToggleSwitch IsOn="{Binding MenuCompress, Mode=TwoWay}" /></ContentControl>
+                        <ContentControl Style="{StaticResource SettingsExpanderItemStyle}" AutomationProperties.Name="Add to .7z"><ToggleSwitch IsOn="{Binding MenuCompress7z, Mode=TwoWay}" /></ContentControl>
+                        <ContentControl Style="{StaticResource SettingsExpanderItemStyle}" AutomationProperties.Name="Add to .zip"><ToggleSwitch IsOn="{Binding MenuCompressZip, Mode=TwoWay}" /></ContentControl>
+                        <ContentControl Style="{StaticResource SettingsExpanderItemStyle}" AutomationProperties.Name="Compress and share"><ToggleSwitch IsOn="{Binding MenuCompressShare, Mode=TwoWay}" /></ContentControl>
+                        <ContentControl Style="{StaticResource SettingsExpanderItemStyle}" AutomationProperties.Name="Checksums"><ToggleSwitch IsOn="{Binding MenuHash, Mode=TwoWay}" /></ContentControl>
+                    </StackPanel>
+                </Expander>
+                <Button x:Name="DefaultAppsButton" Style="{StaticResource SettingsCardButtonStyle}" AutomationProperties.Name="Default apps" AutomationProperties.HelpText="Choose which archive types open with 7-Zip in Windows Settings." Tag="&#xE7AC;" />
+                <ContentControl Style="{StaticResource SettingsCardStyle}" AutomationProperties.Name="Completion notifications" AutomationProperties.HelpText="When 7-Zip isn't in front, a notification tells you when an operation finishes." Tag="&#xEA8F;">
+                    <ToggleSwitch IsOn="{Binding NotifyOnCompletion, Mode=TwoWay}" />
+                </ContentControl>
+
+                <!-- Privacy & security -->
+                <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="Privacy and security" />
+                <ContentControl Style="{StaticResource SettingsCardStyle}" AutomationProperties.Name="Offer saved passwords" AutomationProperties.HelpText="Passwords you choose to remember are kept in Windows Credential Manager and unlocked with Windows Hello." Tag="&#xE8D7;">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <Button x:Name="ForgetPasswordsButton" Content="Forget all" />
+                        <ToggleSwitch IsOn="{Binding OfferSavedPasswords, Mode=TwoWay}" />
+                    </StackPanel>
+                </ContentControl>
+                <ContentControl Style="{StaticResource SettingsCardStyle}" AutomationProperties.Name="Confirm before deleting from archives" Tag="&#xE74D;">
+                    <ToggleSwitch IsOn="{Binding ConfirmDelete, Mode=TwoWay}" />
+                </ContentControl>
+                <ContentControl Style="{StaticResource SettingsCardStyle}" AutomationProperties.Name="Temporary files" AutomationProperties.HelpText="Files opened from archives are copied here and removed when 7-Zip closes." Tag="&#xE7B8;">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <TextBlock x:Name="TempSizeText" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <Button x:Name="CleanTempButton" Content="Clean up" />
+                    </StackPanel>
+                </ContentControl>
+
+                <!-- About -->
+                <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="About" />
+                <Expander Style="{StaticResource SettingsExpanderStyle}">
+                    <Expander.Header>
+                        <ContentControl Style="{StaticResource SettingsExpanderHeaderStyle}" AutomationProperties.Name="7-Zip for Windows 11" AutomationProperties.HelpText="{Binding AboutDescription}" Tag="&#xE946;" />
+                    </Expander.Header>
+                    <StackPanel Padding="58,12,16,12" Spacing="8">
+                        <TextBlock x:Name="VersionText" IsTextSelectionEnabled="True" />
+                        <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" Text="7-Zip engine copyright © Igor Pavlov. Licensed under the GNU LGPL, with BSD-3-Clause parts and the unRAR license restriction (the RAR code may not be used to re-create the RAR compression algorithm)." />
+                        <StackPanel Orientation="Horizontal" Spacing="16">
+                            <HyperlinkButton Content="7-zip.org" NavigateUri="https://www.7-zip.org/" />
+                            <HyperlinkButton Content="License" NavigateUri="https://www.7-zip.org/license.txt" />
+                        </StackPanel>
+                    </StackPanel>
+                </Expander>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

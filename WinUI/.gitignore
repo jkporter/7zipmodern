@@ -1,8 +1,0 @@
-bin/
-obj/
-artifacts/
-*.user
-.vs/
-AppPackages/
-BundleArtifacts/
-src/SevenZip.ShellExtension/obj/

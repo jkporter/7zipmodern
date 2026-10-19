@@ -1,0 +1,99 @@
+# Follows the releases on https://www.7-zip.org/download.html. When a newer stable 7-Zip is
+# listed, imports its source (7zXXXX-src.tar.xz) over Asm/, C/, CPP/ and DOC/ (CPP/Windows11
+# is kept), pushes branch upstream/7zip-XXXX, opens a pull request and starts the
+# windows11-release workflow on it as CI. Merging the pull request releases the new version.
+#
+# Needs: Settings > Actions > General > "Allow GitHub Actions to create and approve pull requests".
+
+name: Follow 7-Zip releases
+
+on:
+  schedule:
+    - cron: '23 5 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write
+
+concurrency:
+  group: windows11-upstream
+
+jobs:
+  follow:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - id: repo
+        shell: pwsh
+        run: .github/scripts/Get-7ZipVersion.ps1 -Source Repo >> $env:GITHUB_OUTPUT
+
+      - id: upstream
+        shell: pwsh
+        run: .github/scripts/Get-7ZipVersion.ps1 -Source Upstream >> $env:GITHUB_OUTPUT
+
+      - id: check
+        env:
+          REPO_VERSION: ${{ steps.repo.outputs.version }}
+          UPSTREAM_VERSION: ${{ steps.upstream.outputs.version }}
+          BRANCH: upstream/7zip-${{ steps.upstream.outputs.short }}
+        run: |
+          newer=false
+          if [ "$(printf '%s\n%s\n' "$REPO_VERSION" "$UPSTREAM_VERSION" | sort -V | tail -n1)" = "$UPSTREAM_VERSION" ] \
+             && [ "$UPSTREAM_VERSION" != "$REPO_VERSION" ]; then
+            if git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null; then
+              echo "::notice::$BRANCH already exists; nothing to do."
+            else
+              newer=true
+            fi
+          fi
+          echo "newer=$newer" >> "$GITHUB_OUTPUT"
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+          echo "Source tree: 7-Zip $REPO_VERSION; download page: 7-Zip $UPSTREAM_VERSION; import: $newer" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Import the upstream source
+        if: steps.check.outputs.newer == 'true'
+        env:
+          SRC_URL: ${{ steps.upstream.outputs.src_url }}
+          VERSION: ${{ steps.upstream.outputs.version }}
+          MAJOR: ${{ steps.upstream.outputs.major }}
+          MINOR: ${{ steps.upstream.outputs.minor }}
+        run: |
+          src="$RUNNER_TEMP/7zip-src"
+          mkdir -p "$src"
+          curl --fail --location --silent --show-error --output "$RUNNER_TEMP/src.tar.xz" "$SRC_URL"
+          tar -xJf "$RUNNER_TEMP/src.tar.xz" -C "$src"
+          # the tarball must hold the version it claims to be
+          grep -Eq "#define MY_VER_MAJOR $MAJOR\b" "$src/C/7zVersion.h"
+          grep -Eq "#define MY_VER_MINOR $MINOR\b" "$src/C/7zVersion.h"
+          for dir in Asm C CPP DOC; do
+            test -d "$src/$dir"
+            rsync -a --delete --exclude=/Windows11/ "$src/$dir/" "$dir/"
+          done
+          git status --short | head -50
+
+      - name: Open the pull request
+        if: steps.check.outputs.newer == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ steps.check.outputs.branch }}
+          VERSION: ${{ steps.upstream.outputs.version }}
+          DATE: ${{ steps.upstream.outputs.date }}
+          SRC_URL: ${{ steps.upstream.outputs.src_url }}
+          BASE: ${{ github.event.repository.default_branch }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git switch -c "$BRANCH"
+          git add -A Asm C CPP DOC
+          git commit -m "Import 7-Zip $VERSION source" -m "From $SRC_URL ($DATE)."
+          git push origin "$BRANCH"
+          gh pr create --base "$BASE" --head "$BRANCH" \
+            --title "Update to 7-Zip $VERSION" \
+            --body "7-Zip $VERSION ($DATE) is out: [release](https://github.com/ip7z/7zip/releases/tag/$VERSION) · [what's new](https://www.7-zip.org/history.txt).
+
+          This imports \`$(basename "$SRC_URL")\` over \`Asm/\`, \`C/\`, \`CPP/\` and \`DOC/\`; \`CPP/Windows11\` is unchanged. The **Windows 11 release** workflow builds and tests it on this branch. Merging this pull request publishes 7-Zip $VERSION for Windows 11."
+          # pushes made with GITHUB_TOKEN don't trigger workflows, so start the CI run explicitly
+          gh workflow run windows11-release.yml --ref "$BRANCH"

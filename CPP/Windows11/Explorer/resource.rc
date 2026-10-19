@@ -1,0 +1,3 @@
+#include "../../7zip/MyVersionInfo.rc"
+
+MY_VERSION_INFO_DLL("7-Zip File Explorer integration", "SevenZip.ShellExtension")
