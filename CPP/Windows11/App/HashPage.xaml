@@ -6,110 +6,114 @@
 
     <Grid Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="0,1,0,0">
         <ScrollViewer>
-            <StackPanel MaxWidth="{StaticResource PageMaxWidth}" Padding="{StaticResource PagePadding}" Spacing="12">
-                <TextBlock Style="{StaticResource PageTitleStyle}" Text="Checksums" />
-                <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Compute file checksums with the 7-Zip engine, then paste a published checksum to verify a download." TextWrapping="Wrap" />
+            <!-- The Grid stretches to the viewport and centers the MaxWidth panel. As the direct content of the
+                 ScrollViewer, the panel would be centered by its desired width instead and pushed to the right. -->
+            <Grid>
+                <StackPanel MaxWidth="{StaticResource PageMaxWidth}" Padding="{StaticResource PagePadding}" Spacing="12">
+                    <TextBlock Style="{StaticResource PageTitleStyle}" Text="Checksums" />
+                    <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Compute file checksums with the 7-Zip engine, then paste a published checksum to verify a download." TextWrapping="Wrap" />
 
-                <Grid Padding="16" ColumnSpacing="12" RowSpacing="12" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="{StaticResource OverlayCornerRadius}">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
+                    <Grid Padding="16" ColumnSpacing="12" RowSpacing="12" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="{StaticResource OverlayCornerRadius}">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
 
-                    <ItemsControl x:Name="SourcesList">
+                        <ItemsControl x:Name="SourcesList">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Margin="0,2" Orientation="Horizontal" Spacing="10">
+                                        <Image Width="20" Height="20" Source="{Binding Icon}" />
+                                        <TextBlock VerticalAlignment="Center" Text="{Binding Path}" TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Drop files or folders here, or choose them." Visibility="{Binding HasSources, Converter={StaticResource CollapsedIf}}" />
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Top">
+                            <Button x:Name="AddFilesButton" Content="Add files…" />
+                            <Button x:Name="ClearButton" Content="Clear" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="12">
+                            <TextBlock VerticalAlignment="Center" Style="{StaticResource BodyStrongTextBlockStyle}" Text="Algorithms" />
+                            <ItemsControl x:Name="AlgorithmsList">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Horizontal" Spacing="8" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <ToggleButton Content="{Binding Name}" IsChecked="{Binding IsSelected, Mode=TwoWay}" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="8">
+                            <Button x:Name="ComputeButton" IsEnabled="{Binding IsWorking, Converter={StaticResource Not}}" Style="{StaticResource AccentButtonStyle}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <ProgressRing Width="16" Height="16" IsActive="{Binding IsWorking}" Visibility="{Binding IsWorking, Converter={StaticResource VisibleIf}}" />
+                                    <TextBlock Text="Compute" />
+                                </StackPanel>
+                            </Button>
+                            <Button x:Name="CopyAllButton" Content="Copy all" IsEnabled="{Binding HasResults}" />
+                            <Button x:Name="ExportButton" Content="Save checksum file…" />
+                        </StackPanel>
+                    </Grid>
+
+                    <AutoSuggestBox
+                        x:Name="ExpectedBox"
+                        Header="Verify"
+                        PlaceholderText="Paste the expected checksum (any algorithm)"
+                        QueryIcon="Paste"
+                        Text="{Binding Expected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                    <InfoBar
+                        x:Name="VerifyBar"
+                        IsClosable="False"
+                        IsOpen="{Binding HasVerifyText}"
+                        Message="{Binding VerifyText}" />
+
+                    <ItemsControl x:Name="ResultsList">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <StackPanel Margin="0,2" Orientation="Horizontal" Spacing="10">
-                                    <Image Width="20" Height="20" Source="{Binding Icon}" />
-                                    <TextBlock VerticalAlignment="Center" Text="{Binding Path}" TextTrimming="CharacterEllipsis" />
+                                <StackPanel Margin="0,0,0,12" Padding="16" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="{StaticResource OverlayCornerRadius}" Spacing="8">
+                                    <Grid>
+                                        <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock HorizontalAlignment="Right" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{Binding SizeText}" />
+                                    </Grid>
+                                    <ItemsControl ItemsSource="{Binding Digests}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid ColumnSpacing="12">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="90" />
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{Binding Algorithm}" />
+                                                    <TextBlock Grid.Column="1" VerticalAlignment="Center" FontFamily="{StaticResource MonoFont}" IsTextSelectionEnabled="True" Text="{Binding Value}" TextWrapping="Wrap" />
+                                                    <FontIcon Grid.Column="2" AutomationProperties.Name="Matches" Foreground="{ThemeResource SystemFillColorSuccessBrush}" Glyph="&#xE73E;" ToolTipService.ToolTip="Matches the expected checksum" Visibility="{Binding Matches, Converter={StaticResource VisibleIf}}" />
+                                                    <Button Grid.Column="3" Style="{StaticResource SubtleButtonStyle}" AutomationProperties.Name="{Binding CopyLabel}" Command="{Binding CopyCommand}" ToolTipService.ToolTip="Copy">
+                                                        <FontIcon FontSize="16" Glyph="&#xE8C8;" />
+                                                    </Button>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
                                 </StackPanel>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
-                    <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Drop files or folders here, or choose them." Visibility="{Binding HasSources, Converter={StaticResource CollapsedIf}}" />
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Top">
-                        <Button x:Name="AddFilesButton" Content="Add files…" />
-                        <Button x:Name="ClearButton" Content="Clear" />
-                    </StackPanel>
-
-                    <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="12">
-                        <TextBlock VerticalAlignment="Center" Style="{StaticResource BodyStrongTextBlockStyle}" Text="Algorithms" />
-                        <ItemsControl x:Name="AlgorithmsList">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <StackPanel Orientation="Horizontal" Spacing="8" />
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <ToggleButton Content="{Binding Name}" IsChecked="{Binding IsSelected, Mode=TwoWay}" />
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </StackPanel>
-
-                    <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="8">
-                        <Button x:Name="ComputeButton" IsEnabled="{Binding IsWorking, Converter={StaticResource Not}}" Style="{StaticResource AccentButtonStyle}">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <ProgressRing Width="16" Height="16" IsActive="{Binding IsWorking}" Visibility="{Binding IsWorking, Converter={StaticResource VisibleIf}}" />
-                                <TextBlock Text="Compute" />
-                            </StackPanel>
-                        </Button>
-                        <Button x:Name="CopyAllButton" Content="Copy all" IsEnabled="{Binding HasResults}" />
-                        <Button x:Name="ExportButton" Content="Save checksum file…" />
-                    </StackPanel>
-                </Grid>
-
-                <AutoSuggestBox
-                    x:Name="ExpectedBox"
-                    Header="Verify"
-                    PlaceholderText="Paste the expected checksum (any algorithm)"
-                    QueryIcon="Paste"
-                    Text="{Binding Expected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                <InfoBar
-                    x:Name="VerifyBar"
-                    IsClosable="False"
-                    IsOpen="{Binding HasVerifyText}"
-                    Message="{Binding VerifyText}" />
-
-                <ItemsControl x:Name="ResultsList">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <StackPanel Margin="0,0,0,12" Padding="16" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="{StaticResource OverlayCornerRadius}" Spacing="8">
-                                <Grid>
-                                    <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
-                                    <TextBlock HorizontalAlignment="Right" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{Binding SizeText}" />
-                                </Grid>
-                                <ItemsControl ItemsSource="{Binding Digests}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Grid ColumnSpacing="12">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="90" />
-                                                    <ColumnDefinition Width="*" />
-                                                    <ColumnDefinition Width="Auto" />
-                                                    <ColumnDefinition Width="Auto" />
-                                                </Grid.ColumnDefinitions>
-                                                <TextBlock VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{Binding Algorithm}" />
-                                                <TextBlock Grid.Column="1" VerticalAlignment="Center" FontFamily="{StaticResource MonoFont}" IsTextSelectionEnabled="True" Text="{Binding Value}" TextWrapping="Wrap" />
-                                                <FontIcon Grid.Column="2" AutomationProperties.Name="Matches" Foreground="{ThemeResource SystemFillColorSuccessBrush}" Glyph="&#xE73E;" ToolTipService.ToolTip="Matches the expected checksum" Visibility="{Binding Matches, Converter={StaticResource VisibleIf}}" />
-                                                <Button Grid.Column="3" Style="{StaticResource SubtleButtonStyle}" AutomationProperties.Name="{Binding CopyLabel}" Command="{Binding CopyCommand}" ToolTipService.ToolTip="Copy">
-                                                    <FontIcon FontSize="16" Glyph="&#xE8C8;" />
-                                                </Button>
-                                            </Grid>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </StackPanel>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </StackPanel>
+                </StackPanel>
+            </Grid>
         </ScrollViewer>
     </Grid>
 </UserControl>

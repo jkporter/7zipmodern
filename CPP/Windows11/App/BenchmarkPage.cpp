@@ -93,8 +93,8 @@ CBenchmarkPage::CBenchmarkPage():
     _closed(false),
     _cancelRequested(false),
     _context(NULL),
-    _compressSpeed(L"—"),
-    _decompressSpeed(L"—"),
+    _compressSpeed(L"\x2014"),
+    _decompressSpeed(L"\x2014"),
     _averageText(L"Measures LZMA2 compression and decompression speed with the real engine."
         L" Data is generated in memory; nothing is written to disk.")
 {
@@ -199,9 +199,9 @@ void CBenchmarkPage::AddPass(const CBenchmarkPass &pass)
   _averageText.Add_UInt32(_passes.Size());
   _averageText += L" passes: compress ";
   _averageText += FormatSpeed(compress / n);
-  _averageText += L" · decompress ";
+  _averageText += L" \x00B7 decompress ";
   _averageText += FormatSpeed(decompress / n);
-  _averageText += L" · ratio ";
+  _averageText += L" \x00B7 ratio ";
   _averageText += FormatPercent(ratio / n);
 
   RaisePropertyChanged(L"CompressSpeed");

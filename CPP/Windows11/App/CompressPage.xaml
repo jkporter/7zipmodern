@@ -11,147 +11,151 @@
         </Grid.RowDefinitions>
 
         <ScrollViewer>
-            <StackPanel MaxWidth="{StaticResource PageMaxWidth}" Padding="{StaticResource PagePadding}" Spacing="{StaticResource SettingsCardSpacing}">
-                <TextBlock Margin="0,0,0,12" Style="{StaticResource PageTitleStyle}" Text="Create archive" />
+            <!-- The Grid stretches to the viewport and centers the MaxWidth panel. As the direct content of the
+                 ScrollViewer, the panel would be centered by its desired width instead and pushed to the right. -->
+            <Grid>
+                <StackPanel MaxWidth="{StaticResource PageMaxWidth}" Padding="{StaticResource PagePadding}" Spacing="{StaticResource SettingsCardSpacing}">
+                    <TextBlock Margin="0,0,0,12" Style="{StaticResource PageTitleStyle}" Text="Create archive" />
 
-                <!-- What -->
-                <Expander Style="{StaticResource SettingsExpanderStyle}" IsExpanded="True">
-                    <Expander.Header>
-                        <ContentControl Style="{StaticResource SettingsExpanderHeaderStyle}" AutomationProperties.Name="{Binding SourceSummary}" AutomationProperties.HelpText="{Binding TotalSizeText}" Tag="&#xE8B7;">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <Button x:Name="AddFilesButton" Content="Add files…" />
-                                <Button x:Name="AddFolderButton" Content="Add folder…" />
-                            </StackPanel>
-                        </ContentControl>
-                    </Expander.Header>
-                    <ListView x:Name="SourcesList" MaxHeight="240" SelectionMode="None">
-                        <ListView.ItemTemplate>
-                            <DataTemplate>
-                                <Grid Padding="44,6,4,6" ColumnSpacing="12">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <Image Width="20" Height="20" Source="{Binding Icon}" />
-                                    <StackPanel Grid.Column="1">
-                                        <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
-                                        <TextBlock Style="{ThemeResource ListCaptionTextStyle}" Text="{Binding Folder}" />
-                                    </StackPanel>
-                                    <Button Grid.Column="2" Style="{StaticResource SubtleButtonStyle}" AutomationProperties.Name="{Binding RemoveLabel}" Command="{Binding RemoveCommand}" ToolTipService.ToolTip="Remove">
-                                        <FontIcon FontSize="12" Glyph="&#xE711;" />
-                                    </Button>
-                                </Grid>
-                            </DataTemplate>
-                        </ListView.ItemTemplate>
-                    </ListView>
-                </Expander>
+                    <!-- What -->
+                    <Expander Style="{StaticResource SettingsExpanderStyle}" IsExpanded="True">
+                        <Expander.Header>
+                            <ContentControl Style="{StaticResource SettingsExpanderHeaderStyle}" AutomationProperties.Name="{Binding SourceSummary}" AutomationProperties.HelpText="{Binding TotalSizeText}" Tag="&#xE8B7;">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <Button x:Name="AddFilesButton" Content="Add files…" />
+                                    <Button x:Name="AddFolderButton" Content="Add folder…" />
+                                </StackPanel>
+                            </ContentControl>
+                        </Expander.Header>
+                        <ListView x:Name="SourcesList" MaxHeight="240" SelectionMode="None">
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Padding="44,6,4,6" ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <Image Width="20" Height="20" Source="{Binding Icon}" />
+                                        <StackPanel Grid.Column="1">
+                                            <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Style="{ThemeResource ListCaptionTextStyle}" Text="{Binding Folder}" />
+                                        </StackPanel>
+                                        <Button Grid.Column="2" Style="{StaticResource SubtleButtonStyle}" AutomationProperties.Name="{Binding RemoveLabel}" Command="{Binding RemoveCommand}" ToolTipService.ToolTip="Remove">
+                                            <FontIcon FontSize="12" Glyph="&#xE711;" />
+                                        </Button>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </Expander>
 
-                <!-- Where -->
-                <ContentControl Style="{StaticResource SettingsCardStyle}" AutomationProperties.Name="Save as" AutomationProperties.HelpText="The new archive is written next to a temporary name and only appears once it's complete." Tag="&#xE74E;">
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <TextBox MinWidth="320" MaxWidth="420" Text="{Binding ArchivePath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Archive path" />
-                        <Button x:Name="BrowseButton" Content="Browse…" />
-                    </StackPanel>
-                </ContentControl>
+                    <!-- Where -->
+                    <ContentControl Style="{StaticResource SettingsCardStyle}" AutomationProperties.Name="Save as" AutomationProperties.HelpText="The new archive is written next to a temporary name and only appears once it's complete." Tag="&#xE74E;">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBox MinWidth="320" MaxWidth="420" Text="{Binding ArchivePath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Archive path" />
+                            <Button x:Name="BrowseButton" Content="Browse…" />
+                        </StackPanel>
+                    </ContentControl>
 
-                <!-- Format -->
-                <ContentControl Style="{StaticResource SettingsCardStyle}" AutomationProperties.Name="Format" AutomationProperties.HelpText="{Binding FormatDescription}" Tag="&#xE7C3;">
-                    <ComboBox x:Name="FormatBox" MinWidth="200" AutomationProperties.Name="Format" SelectedIndex="{Binding FormatIndex, Mode=TwoWay}" />
-                </ContentControl>
+                    <!-- Format -->
+                    <ContentControl Style="{StaticResource SettingsCardStyle}" AutomationProperties.Name="Format" AutomationProperties.HelpText="{Binding FormatDescription}" Tag="&#xE7C3;">
+                        <ComboBox x:Name="FormatBox" MinWidth="200" AutomationProperties.Name="Format" SelectedIndex="{Binding FormatIndex, Mode=TwoWay}" />
+                    </ContentControl>
 
-                <!-- Compression -->
-                <Expander Style="{StaticResource SettingsExpanderStyle}">
-                    <Expander.Header>
-                        <ContentControl Style="{StaticResource SettingsExpanderHeaderStyle}" AutomationProperties.Name="Compression level" AutomationProperties.HelpText="{Binding MemoryText}" Tag="&#xE9F5;">
-                            <ComboBox x:Name="LevelBox" MinWidth="200" AutomationProperties.Name="Compression level" SelectedIndex="{Binding LevelIndex, Mode=TwoWay}" />
-                        </ContentControl>
-                    </Expander.Header>
-                    <StackPanel>
-                        <ContentControl Style="{StaticResource SettingsExpanderItemStyle}" AutomationProperties.Name="Method" Visibility="{Binding ShowMethodOptions, Converter={StaticResource VisibleIf}}">
-                            <ComboBox x:Name="MethodBox" MinWidth="200" AutomationProperties.Name="Method" SelectedIndex="{Binding MethodIndex, Mode=TwoWay}" />
-                        </ContentControl>
-                        <ContentControl Style="{StaticResource SettingsExpanderItemStyle}" AutomationProperties.Name="Dictionary size" AutomationProperties.HelpText="Bigger finds more repetition but needs more memory to compress and extract." Visibility="{Binding ShowMethodOptions, Converter={StaticResource VisibleIf}}">
-                            <ComboBox x:Name="DictionaryBox" MinWidth="200" AutomationProperties.Name="Dictionary size" SelectedIndex="{Binding DictionaryIndex, Mode=TwoWay}" />
-                        </ContentControl>
-                        <ContentControl Style="{StaticResource SettingsExpanderItemStyle}" AutomationProperties.Name="Word size" Visibility="{Binding ShowMethodOptions, Converter={StaticResource VisibleIf}}">
-                            <ComboBox x:Name="WordSizeBox" MinWidth="200" AutomationProperties.Name="Word size" SelectedIndex="{Binding WordSizeIndex, Mode=TwoWay}" />
-                        </ContentControl>
-                        <ContentControl Style="{StaticResource SettingsExpanderItemStyle}" AutomationProperties.Name="Solid block size" AutomationProperties.HelpText="Solid archives compress similar files together: smaller, but changing one file rewrites its whole block." Visibility="{Binding ShowSolid, Converter={StaticResource VisibleIf}}">
-                            <ComboBox x:Name="SolidBox" MinWidth="200" AutomationProperties.Name="Solid block size" SelectedIndex="{Binding SolidIndex, Mode=TwoWay}" />
-                        </ContentControl>
-                        <ContentControl Style="{StaticResource SettingsExpanderItemStyle}" AutomationProperties.Name="CPU threads" Visibility="{Binding ShowThreads, Converter={StaticResource VisibleIf}}">
-                            <ComboBox x:Name="ThreadsBox" MinWidth="200" AutomationProperties.Name="CPU threads" SelectedIndex="{Binding ThreadsIndex, Mode=TwoWay}" />
-                        </ContentControl>
-                    </StackPanel>
-                </Expander>
+                    <!-- Compression -->
+                    <Expander Style="{StaticResource SettingsExpanderStyle}">
+                        <Expander.Header>
+                            <ContentControl Style="{StaticResource SettingsExpanderHeaderStyle}" AutomationProperties.Name="Compression level" AutomationProperties.HelpText="{Binding MemoryText}" Tag="&#xE9F5;">
+                                <ComboBox x:Name="LevelBox" MinWidth="200" AutomationProperties.Name="Compression level" SelectedIndex="{Binding LevelIndex, Mode=TwoWay}" />
+                            </ContentControl>
+                        </Expander.Header>
+                        <StackPanel>
+                            <ContentControl Style="{StaticResource SettingsExpanderItemStyle}" AutomationProperties.Name="Method" Visibility="{Binding ShowMethodOptions, Converter={StaticResource VisibleIf}}">
+                                <ComboBox x:Name="MethodBox" MinWidth="200" AutomationProperties.Name="Method" SelectedIndex="{Binding MethodIndex, Mode=TwoWay}" />
+                            </ContentControl>
+                            <ContentControl Style="{StaticResource SettingsExpanderItemStyle}" AutomationProperties.Name="Dictionary size" AutomationProperties.HelpText="Bigger finds more repetition but needs more memory to compress and extract." Visibility="{Binding ShowMethodOptions, Converter={StaticResource VisibleIf}}">
+                                <ComboBox x:Name="DictionaryBox" MinWidth="200" AutomationProperties.Name="Dictionary size" SelectedIndex="{Binding DictionaryIndex, Mode=TwoWay}" />
+                            </ContentControl>
+                            <ContentControl Style="{StaticResource SettingsExpanderItemStyle}" AutomationProperties.Name="Word size" Visibility="{Binding ShowMethodOptions, Converter={StaticResource VisibleIf}}">
+                                <ComboBox x:Name="WordSizeBox" MinWidth="200" AutomationProperties.Name="Word size" SelectedIndex="{Binding WordSizeIndex, Mode=TwoWay}" />
+                            </ContentControl>
+                            <ContentControl Style="{StaticResource SettingsExpanderItemStyle}" AutomationProperties.Name="Solid block size" AutomationProperties.HelpText="Solid archives compress similar files together: smaller, but changing one file rewrites its whole block." Visibility="{Binding ShowSolid, Converter={StaticResource VisibleIf}}">
+                                <ComboBox x:Name="SolidBox" MinWidth="200" AutomationProperties.Name="Solid block size" SelectedIndex="{Binding SolidIndex, Mode=TwoWay}" />
+                            </ContentControl>
+                            <ContentControl Style="{StaticResource SettingsExpanderItemStyle}" AutomationProperties.Name="CPU threads" Visibility="{Binding ShowThreads, Converter={StaticResource VisibleIf}}">
+                                <ComboBox x:Name="ThreadsBox" MinWidth="200" AutomationProperties.Name="CPU threads" SelectedIndex="{Binding ThreadsIndex, Mode=TwoWay}" />
+                            </ContentControl>
+                        </StackPanel>
+                    </Expander>
 
-                <!-- Encryption -->
-                <Expander Style="{StaticResource SettingsExpanderStyle}" Visibility="{Binding ShowEncryption, Converter={StaticResource VisibleIf}}">
-                    <Expander.Header>
-                        <ContentControl Style="{StaticResource SettingsExpanderHeaderStyle}" AutomationProperties.Name="Encryption" AutomationProperties.HelpText="Protect the archive with a password" Tag="&#xE72E;" />
-                    </Expander.Header>
-                    <StackPanel>
-                        <Border Padding="58,12,16,12">
-                            <StackPanel MinWidth="360" HorizontalAlignment="Left" Spacing="10">
-                                <PasswordBox x:Name="PasswordBox" Header="Password" PasswordRevealMode="Peek" />
-                                <PasswordBox x:Name="ConfirmPasswordBox" Header="Confirm password" PasswordRevealMode="Peek" />
-                                <TextBlock Foreground="{ThemeResource SystemFillColorCriticalBrush}" Text="{Binding PasswordError}" Visibility="{Binding PasswordError, Converter={StaticResource VisibleIfNotEmpty}}" />
-                                <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Style="{StaticResource CaptionTextBlockStyle}" Text="{Binding PasswordHint}" TextWrapping="Wrap" />
-                            </StackPanel>
-                        </Border>
-                        <ContentControl Style="{StaticResource SettingsExpanderItemStyle}" AutomationProperties.Name="Encrypt file names" AutomationProperties.HelpText="Without the password nobody can even see which files are inside." Visibility="{Binding ShowEncryptNames, Converter={StaticResource VisibleIf}}">
-                            <ToggleSwitch AutomationProperties.Name="Encrypt file names" IsOn="{Binding EncryptFileNames, Mode=TwoWay}" />
-                        </ContentControl>
-                        <ContentControl Style="{StaticResource SettingsExpanderItemStyle}" AutomationProperties.Name="Encryption method" Visibility="{Binding ShowZipEncryption, Converter={StaticResource VisibleIf}}">
-                            <ComboBox x:Name="ZipEncryptionBox" MinWidth="200" AutomationProperties.Name="Encryption method" SelectedIndex="{Binding ZipEncryptionIndex, Mode=TwoWay}" />
-                        </ContentControl>
-                    </StackPanel>
-                </Expander>
+                    <!-- Encryption -->
+                    <Expander Style="{StaticResource SettingsExpanderStyle}" Visibility="{Binding ShowEncryption, Converter={StaticResource VisibleIf}}">
+                        <Expander.Header>
+                            <ContentControl Style="{StaticResource SettingsExpanderHeaderStyle}" AutomationProperties.Name="Encryption" AutomationProperties.HelpText="Protect the archive with a password" Tag="&#xE72E;" />
+                        </Expander.Header>
+                        <StackPanel>
+                            <Border Padding="58,12,16,12">
+                                <StackPanel MinWidth="360" HorizontalAlignment="Left" Spacing="10">
+                                    <PasswordBox x:Name="PasswordBox" Header="Password" PasswordRevealMode="Peek" />
+                                    <PasswordBox x:Name="ConfirmPasswordBox" Header="Confirm password" PasswordRevealMode="Peek" />
+                                    <TextBlock Foreground="{ThemeResource SystemFillColorCriticalBrush}" Text="{Binding PasswordError}" Visibility="{Binding PasswordError, Converter={StaticResource VisibleIfNotEmpty}}" />
+                                    <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Style="{StaticResource CaptionTextBlockStyle}" Text="{Binding PasswordHint}" TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
+                            <ContentControl Style="{StaticResource SettingsExpanderItemStyle}" AutomationProperties.Name="Encrypt file names" AutomationProperties.HelpText="Without the password nobody can even see which files are inside." Visibility="{Binding ShowEncryptNames, Converter={StaticResource VisibleIf}}">
+                                <ToggleSwitch AutomationProperties.Name="Encrypt file names" IsOn="{Binding EncryptFileNames, Mode=TwoWay}" />
+                            </ContentControl>
+                            <ContentControl Style="{StaticResource SettingsExpanderItemStyle}" AutomationProperties.Name="Encryption method" Visibility="{Binding ShowZipEncryption, Converter={StaticResource VisibleIf}}">
+                                <ComboBox x:Name="ZipEncryptionBox" MinWidth="200" AutomationProperties.Name="Encryption method" SelectedIndex="{Binding ZipEncryptionIndex, Mode=TwoWay}" />
+                            </ContentControl>
+                        </StackPanel>
+                    </Expander>
 
-                <!-- Volumes -->
-                <ContentControl Style="{StaticResource SettingsCardStyle}" AutomationProperties.Name="Split into volumes" AutomationProperties.HelpText="Split into parts named .001, .002… — for size-limited uploads, email or FAT32 drives." Tag="&#xE8A9;" Visibility="{Binding ShowVolumes, Converter={StaticResource VisibleIf}}">
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <ComboBox x:Name="VolumeBox" MinWidth="180" AutomationProperties.Name="Volume size" SelectedIndex="{Binding VolumeIndex, Mode=TwoWay}" />
-                        <TextBox Width="110" PlaceholderText="or e.g. 250m" Text="{Binding CustomVolume, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Custom volume size" />
-                    </StackPanel>
-                </ContentControl>
+                    <!-- Volumes -->
+                    <ContentControl Style="{StaticResource SettingsCardStyle}" AutomationProperties.Name="Split into volumes" AutomationProperties.HelpText="Split into parts named .001, .002… — for size-limited uploads, email or FAT32 drives." Tag="&#xE8A9;" Visibility="{Binding ShowVolumes, Converter={StaticResource VisibleIf}}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <ComboBox x:Name="VolumeBox" MinWidth="180" AutomationProperties.Name="Volume size" SelectedIndex="{Binding VolumeIndex, Mode=TwoWay}" />
+                            <TextBox Width="110" PlaceholderText="or e.g. 250m" Text="{Binding CustomVolume, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Custom volume size" />
+                        </StackPanel>
+                    </ContentControl>
 
-                <!-- After -->
-                <ContentControl Style="{StaticResource SettingsCardStyle}" AutomationProperties.Name="Share when done" AutomationProperties.HelpText="Opens the Windows Share sheet with the new archive (replaces &quot;Compress and email&quot;)." Tag="&#xE72D;">
-                    <ToggleSwitch AutomationProperties.Name="Share when done" IsOn="{Binding ShareAfter, Mode=TwoWay}" />
-                </ContentControl>
-                <ContentControl Style="{StaticResource SettingsCardStyle}" AutomationProperties.Name="Delete originals" AutomationProperties.HelpText="Moves the original files to the Recycle Bin after the archive is created successfully." Tag="&#xE74D;">
-                    <ToggleSwitch AutomationProperties.Name="Delete originals" IsOn="{Binding DeleteAfter, Mode=TwoWay}" />
-                </ContentControl>
+                    <!-- After -->
+                    <ContentControl Style="{StaticResource SettingsCardStyle}" AutomationProperties.Name="Share when done" AutomationProperties.HelpText="Opens the Windows Share sheet with the new archive (replaces &quot;Compress and email&quot;)." Tag="&#xE72D;">
+                        <ToggleSwitch AutomationProperties.Name="Share when done" IsOn="{Binding ShareAfter, Mode=TwoWay}" />
+                    </ContentControl>
+                    <ContentControl Style="{StaticResource SettingsCardStyle}" AutomationProperties.Name="Delete originals" AutomationProperties.HelpText="Moves the original files to the Recycle Bin after the archive is created successfully." Tag="&#xE74D;">
+                        <ToggleSwitch AutomationProperties.Name="Delete originals" IsOn="{Binding DeleteAfter, Mode=TwoWay}" />
+                    </ContentControl>
 
-                <!-- Advanced -->
-                <Expander Style="{StaticResource SettingsExpanderStyle}">
-                    <Expander.Header>
-                        <ContentControl Style="{StaticResource SettingsExpanderHeaderStyle}" AutomationProperties.Name="Advanced" AutomationProperties.HelpText="Update mode, paths, timestamps and engine parameters" Tag="&#xE713;" />
-                    </Expander.Header>
-                    <StackPanel>
-                        <ContentControl Style="{StaticResource SettingsExpanderItemStyle}" AutomationProperties.Name="Update mode" AutomationProperties.HelpText="Used when adding to an archive that already exists.">
-                            <ComboBox x:Name="UpdateModeBox" MinWidth="220" AutomationProperties.Name="Update mode" SelectedIndex="{Binding UpdateModeIndex, Mode=TwoWay}" />
-                        </ContentControl>
-                        <ContentControl Style="{StaticResource SettingsExpanderItemStyle}" AutomationProperties.Name="Paths">
-                            <ComboBox x:Name="PathModeBox" MinWidth="220" AutomationProperties.Name="Paths" SelectedIndex="{Binding PathModeIndex, Mode=TwoWay}" />
-                        </ContentControl>
-                        <ContentControl Style="{StaticResource SettingsExpanderItemStyle}" AutomationProperties.Name="Store creation times">
-                            <ToggleSwitch AutomationProperties.Name="Store creation times" IsOn="{Binding StoreCreationTime, Mode=TwoWay}" />
-                        </ContentControl>
-                        <ContentControl Style="{StaticResource SettingsExpanderItemStyle}" AutomationProperties.Name="Store last-access times">
-                            <ToggleSwitch AutomationProperties.Name="Store last-access times" IsOn="{Binding StoreAccessTime, Mode=TwoWay}" />
-                        </ContentControl>
-                        <ContentControl Style="{StaticResource SettingsExpanderItemStyle}" AutomationProperties.Name="Follow folder links" AutomationProperties.HelpText="Otherwise folder links and junctions are stored as empty folders.">
-                            <ToggleSwitch AutomationProperties.Name="Follow folder links" IsOn="{Binding FollowLinks, Mode=TwoWay}" />
-                        </ContentControl>
-                        <ContentControl Style="{StaticResource SettingsExpanderItemStyle}" AutomationProperties.Name="Parameters" AutomationProperties.HelpText="Engine switches, e.g. qs=on f=off (same syntax as classic 7-Zip).">
-                            <TextBox MinWidth="220" FontFamily="{StaticResource MonoFont}" AutomationProperties.Name="Parameters" Text="{Binding Parameters, Mode=TwoWay}" />
-                        </ContentControl>
-                    </StackPanel>
-                </Expander>
-            </StackPanel>
+                    <!-- Advanced -->
+                    <Expander Style="{StaticResource SettingsExpanderStyle}">
+                        <Expander.Header>
+                            <ContentControl Style="{StaticResource SettingsExpanderHeaderStyle}" AutomationProperties.Name="Advanced" AutomationProperties.HelpText="Update mode, paths, timestamps and engine parameters" Tag="&#xE713;" />
+                        </Expander.Header>
+                        <StackPanel>
+                            <ContentControl Style="{StaticResource SettingsExpanderItemStyle}" AutomationProperties.Name="Update mode" AutomationProperties.HelpText="Used when adding to an archive that already exists.">
+                                <ComboBox x:Name="UpdateModeBox" MinWidth="220" AutomationProperties.Name="Update mode" SelectedIndex="{Binding UpdateModeIndex, Mode=TwoWay}" />
+                            </ContentControl>
+                            <ContentControl Style="{StaticResource SettingsExpanderItemStyle}" AutomationProperties.Name="Paths">
+                                <ComboBox x:Name="PathModeBox" MinWidth="220" AutomationProperties.Name="Paths" SelectedIndex="{Binding PathModeIndex, Mode=TwoWay}" />
+                            </ContentControl>
+                            <ContentControl Style="{StaticResource SettingsExpanderItemStyle}" AutomationProperties.Name="Store creation times">
+                                <ToggleSwitch AutomationProperties.Name="Store creation times" IsOn="{Binding StoreCreationTime, Mode=TwoWay}" />
+                            </ContentControl>
+                            <ContentControl Style="{StaticResource SettingsExpanderItemStyle}" AutomationProperties.Name="Store last-access times">
+                                <ToggleSwitch AutomationProperties.Name="Store last-access times" IsOn="{Binding StoreAccessTime, Mode=TwoWay}" />
+                            </ContentControl>
+                            <ContentControl Style="{StaticResource SettingsExpanderItemStyle}" AutomationProperties.Name="Follow folder links" AutomationProperties.HelpText="Otherwise folder links and junctions are stored as empty folders.">
+                                <ToggleSwitch AutomationProperties.Name="Follow folder links" IsOn="{Binding FollowLinks, Mode=TwoWay}" />
+                            </ContentControl>
+                            <ContentControl Style="{StaticResource SettingsExpanderItemStyle}" AutomationProperties.Name="Parameters" AutomationProperties.HelpText="Engine switches, e.g. qs=on f=off (same syntax as classic 7-Zip).">
+                                <TextBox MinWidth="220" FontFamily="{StaticResource MonoFont}" AutomationProperties.Name="Parameters" Text="{Binding Parameters, Mode=TwoWay}" />
+                            </ContentControl>
+                        </StackPanel>
+                    </Expander>
+                </StackPanel>
+            </Grid>
         </ScrollViewer>
 
         <!-- Footer -->
