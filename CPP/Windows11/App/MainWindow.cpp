@@ -380,7 +380,8 @@ void CMainWindow::CloseTabAt(unsigned index)
     root.DataContext(nullptr);
   if (_tabs.empty())
   {
-    if (_operations.HasActive())
+    // Closing the last tab leaves a Home tab, unless that tab was Home itself.
+    if (tab.Page->GetPageKind() != NPageKind::kHome || _operations.HasActive())
       AddTab(CreateHomePage(this));
     else
       _window.Close();
