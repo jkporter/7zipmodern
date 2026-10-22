@@ -1,0 +1,237 @@
+# Forgejo Actions copy of .github/workflows/windows11-release.yml (Forgejo reads .forgejo/workflows
+# and then ignores .github/workflows; GitHub ignores this directory). Keep the two in step.
+#
+# Builds and tests 7-Zip for Windows 11 (CPP/Windows11) for x64 and arm64, and publishes a
+# Forgejo release named after the 7-Zip version, with files named like the ones on
+# https://www.7-zip.org/download.html (7z2604-x64.exe -> 7z2604-win11-x64.msix).
+#
+# A release is created on the default branch when no release exists yet for the engine version
+# in C/7zVersion.h, i.e. after a "Update to 7-Zip XX.YY" pull request from the
+# windows11-upstream workflow is merged. Run it manually with a revision to re-release the same
+# 7-Zip version (tag 26.04-r1, MSIX version 26.4.1.0).
+#
+# Runners: Forgejo has no hosted runners, so the jobs run on runners registered with these labels
+# (or the labels in the variables below):
+#   ubuntu-latest   any Linux runner with node (e.g. the default node:20-bookworm image);
+#                   PowerShell is installed into the job when it is missing
+#   windows-latest  a Windows host runner (forgejo-runner on Windows, host mode) with Visual
+#                   Studio (C++ and Windows SDK), PowerShell 7, Git and node
+#   windows-11-arm  the same on Windows on Arm
+#
+# Optional settings (repository Settings > Actions > Secrets / Variables):
+#   secret   MSIX_CERTIFICATE           base64 of a .pfx code signing certificate
+#   secret   MSIX_CERTIFICATE_PASSWORD  its password
+#   secret   RELEASE_TOKEN              token with write:repository to create the release
+#                                       (default: the automatic token)
+#   variable MSIX_PUBLISHER             package publisher; default: the certificate subject,
+#                                       or Package.appxmanifest's when unsigned
+#   variable LINUX_RUNNER               runner label for the Linux jobs (default ubuntu-latest)
+#   variable X64_RUNNER                 runner label for x64 (default windows-latest)
+#   variable ARM64_RUNNER               runner label for arm64 (default windows-11-arm; set it to
+#                                       the x64 label to cross-compile without running tests)
+
+name: Windows 11 release
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'Asm/**'
+      - 'C/**'
+      - 'CPP/**'
+      - '.github/scripts/**'
+      - '.forgejo/workflows/windows11-release.yml'
+  pull_request:
+    paths:
+      - 'Asm/**'
+      - 'C/**'
+      - 'CPP/**'
+      - '.github/scripts/**'
+      - '.forgejo/workflows/windows11-release.yml'
+  workflow_dispatch:
+    inputs:
+      revision:
+        description: 'Revision: 0 for the first release of a 7-Zip version, 1, 2, ... to re-release it'
+        type: number
+        default: 0
+      publish:
+        description: 'Create the Forgejo release (default branch only)'
+        type: boolean
+        default: true
+
+concurrency:
+  group: windows11-release-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  version:
+    runs-on: ${{ vars.LINUX_RUNNER || 'ubuntu-latest' }}
+    outputs:
+      version: ${{ steps.repo.outputs.version }}
+      short: ${{ steps.repo.outputs.short }}
+      revision: ${{ steps.release.outputs.revision }}
+      tag: ${{ steps.release.outputs.tag }}
+      publish: ${{ steps.release.outputs.publish }}
+    steps:
+      - uses: https://data.forgejo.org/actions/checkout@v4
+
+      - name: Install PowerShell
+        run: |
+          if command -v pwsh >/dev/null; then exit 0; fi
+          case "$(uname -m)" in aarch64|arm64) arch=arm64 ;; *) arch=x64 ;; esac
+          dir="$RUNNER_TEMP/pwsh"
+          mkdir -p "$dir"
+          curl --fail --location --silent --show-error \
+            "https://github.com/PowerShell/PowerShell/releases/download/v7.4.6/powershell-7.4.6-linux-$arch.tar.gz" \
+            | tar -xz -C "$dir"
+          chmod +x "$dir/pwsh"
+          echo "$dir" >> "$GITHUB_PATH"
+
+      - id: repo
+        shell: pwsh
+        run: .github/scripts/Get-7ZipVersion.ps1 -Source Repo >> $env:GITHUB_OUTPUT
+
+      - id: release
+        env:
+          TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.repo.outputs.version }}
+          REVISION: ${{ inputs.revision || 0 }}
+          WANT_PUBLISH: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.publish) }}
+          ON_DEFAULT_BRANCH: ${{ github.ref_name == github.event.repository.default_branch }}
+        run: |
+          tag="$VERSION"
+          if [ "$REVISION" != "0" ]; then tag="$VERSION-r$REVISION"; fi
+          publish=false
+          if [ "$WANT_PUBLISH" = "true" ] && [ "$ON_DEFAULT_BRANCH" = "true" ]; then
+            status=$(curl --silent --output /dev/null --write-out '%{http_code}' \
+              --header "Authorization: token $TOKEN" \
+              "$GITHUB_SERVER_URL/api/v1/repos/$GITHUB_REPOSITORY/releases/tags/$tag")
+            case "$status" in
+              200) echo "Release $tag already exists; building without publishing." ;;
+              404) publish=true ;;
+              *) echo "Checking for release $tag failed: HTTP $status"; exit 1 ;;
+            esac
+          fi
+          echo "revision=$REVISION" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "publish=$publish" >> "$GITHUB_OUTPUT"
+          echo "7-Zip $VERSION for Windows 11: tag $tag, publish $publish"
+
+  build:
+    needs: version
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            runner: ${{ vars.X64_RUNNER || 'windows-latest' }}
+          - arch: arm64
+            runner: ${{ vars.ARM64_RUNNER || 'windows-11-arm' }}
+    runs-on: ${{ matrix.runner }}
+    env:
+      CERTIFICATE: ${{ secrets.MSIX_CERTIFICATE }}
+      CERTIFICATE_PASSWORD: ${{ secrets.MSIX_CERTIFICATE_PASSWORD }}
+      PUBLISHER: ${{ vars.MSIX_PUBLISHER }}
+    steps:
+      - uses: https://data.forgejo.org/actions/checkout@v4
+
+      # The Windows App SDK / C++/WinRT packages the build script installs with nuget.exe
+      - uses: https://data.forgejo.org/actions/cache@v4
+        with:
+          path: out/packages
+          key: windows11-nuget-${{ hashFiles('CPP/Windows11/Windows11.mak') }}
+
+      - name: Build, test and package
+        shell: pwsh
+        run: |
+          $arguments = @{ Arch = '${{ matrix.arch }}'; Revision = ${{ needs.version.outputs.revision }}; OutDir = 'out' }
+          if ($env:CERTIFICATE) {
+            $pfx = Join-Path $env:RUNNER_TEMP 'signing.pfx'
+            [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:CERTIFICATE))
+            $arguments.CertificatePath = $pfx
+            $arguments.CertificatePassword = $env:CERTIFICATE_PASSWORD
+            if (-not $env:PUBLISHER) {
+              $cert = [Security.Cryptography.X509Certificates.X509Certificate2]::new($pfx, $env:CERTIFICATE_PASSWORD)
+              $env:PUBLISHER = $cert.Subject
+            }
+          }
+          if ($env:PUBLISHER) { $arguments.Publisher = $env:PUBLISHER }
+          .github/scripts/Build-Windows11.ps1 @arguments
+
+      - name: Remove the certificate
+        if: always()
+        shell: pwsh
+        run: Remove-Item (Join-Path $env:RUNNER_TEMP 'signing.pfx') -ErrorAction SilentlyContinue
+
+      # actions/upload-artifact@v4 refuses to run outside github.com; this is Forgejo's patched copy
+      - uses: https://code.forgejo.org/forgejo/upload-artifact@v4
+        with:
+          name: windows11-${{ matrix.arch }}
+          path: |
+            out/*.msix
+            out/*.zip
+          if-no-files-found: error
+
+  release:
+    needs: [version, build]
+    if: needs.version.outputs.publish == 'true'
+    runs-on: ${{ vars.LINUX_RUNNER || 'ubuntu-latest' }}
+    steps:
+      - uses: https://code.forgejo.org/forgejo/download-artifact@v4
+        with:
+          path: dist
+          pattern: windows11-*
+          merge-multiple: true
+
+      - name: Create the release
+        env:
+          TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
+          VERSION: ${{ needs.version.outputs.version }}
+          SHORT: ${{ needs.version.outputs.short }}
+          TAG: ${{ needs.version.outputs.tag }}
+          SIGNED: ${{ secrets.MSIX_CERTIFICATE != '' }}
+        run: |
+          cd dist
+          sha256sum *.msix *.zip > SHA256SUMS.txt
+          if [ "$SIGNED" = "true" ]; then
+            install="Double-click the \`.msix\` for your PC (x64 or arm64) to install it."
+          else
+            install="The \`.msix\` packages are **not signed**: install the publisher's certificate as trusted, or enable Developer Mode and use \`Add-AppxPackage -AllowUnsigned\`."
+          fi
+          cat > ../notes.md <<EOF
+          7-Zip $VERSION for Windows 11: the 7-Zip $VERSION engine (\`7z.dll\`, unchanged) with the WinUI 3 front end from \`CPP/Windows11\`.
+
+          Upstream release: [7-Zip $VERSION](https://github.com/ip7z/7zip/releases/tag/$VERSION) · [what's new](https://www.7-zip.org/history.txt) · [download page](https://www.7-zip.org/download.html)
+
+          | File | System | Description |
+          |---|---|---|
+          | 7z$SHORT-win11-x64.msix | Windows 11 x64 | App package: Explorer context menu, file associations, Share target |
+          | 7z$SHORT-win11-arm64.msix | Windows 11 arm64 | App package |
+          | 7z$SHORT-win11-x64.zip | Windows 11 x64 | Unpackaged app (needs the [Windows App Runtime](https://learn.microsoft.com/windows/apps/windows-app-sdk/downloads) 2.5) |
+          | 7z$SHORT-win11-arm64.zip | Windows 11 arm64 | Unpackaged app |
+
+          $install
+
+          Both the packages and the unpackaged app need the Windows App Runtime 2.5.
+          EOF
+          api="$GITHUB_SERVER_URL/api/v1/repos/$GITHUB_REPOSITORY"
+          # node is on every runner (JavaScript actions need it), so use it for JSON
+          body=$(NOTES_FILE=../notes.md node -e '
+            const e = process.env;
+            process.stdout.write(JSON.stringify({
+              tag_name: e.TAG,
+              target_commitish: e.GITHUB_SHA,
+              name: `7-Zip ${e.VERSION} for Windows 11`,
+              body: require("fs").readFileSync(e.NOTES_FILE, "utf8"),
+            }));')
+          id=$(curl --fail-with-body --silent --show-error \
+            --header "Authorization: token $TOKEN" --header 'Content-Type: application/json' \
+            --data "$body" "$api/releases" \
+            | node -e 'let s = ""; process.stdin.on("data", d => s += d).on("end", () => console.log(JSON.parse(s).id))')
+          for file in ./*; do
+            name=$(basename "$file")
+            echo "Uploading $name"
+            curl --fail-with-body --silent --show-error --output /dev/null \
+              --header "Authorization: token $TOKEN" \
+              --form "attachment=@$file" "$api/releases/$id/assets?name=$name"
+          done

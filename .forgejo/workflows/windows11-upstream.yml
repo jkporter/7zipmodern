@@ -1,0 +1,135 @@
+# Forgejo Actions copy of .github/workflows/windows11-upstream.yml (Forgejo reads .forgejo/workflows
+# and then ignores .github/workflows; GitHub ignores this directory). Keep the two in step.
+#
+# Follows the releases on https://www.7-zip.org/download.html. When a newer stable 7-Zip is
+# listed, imports its source (7zXXXX-src.tar.xz) over Asm/, C/, CPP/ and DOC/ (CPP/Windows11
+# is kept), pushes branch upstream/7zip-XXXX, opens a pull request and starts the
+# windows11-release workflow on it as CI. Merging the pull request releases the new version.
+#
+# Runs on a Linux runner labelled ubuntu-latest (or variable LINUX_RUNNER); PowerShell, rsync
+# and xz are installed into the job when missing. Optional secret UPSTREAM_TOKEN: a token with
+# write:repository to use instead of the automatic one.
+
+name: Follow 7-Zip releases
+
+on:
+  schedule:
+    - cron: '23 5 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: windows11-upstream
+
+jobs:
+  follow:
+    runs-on: ${{ vars.LINUX_RUNNER || 'ubuntu-latest' }}
+    env:
+      TOKEN: ${{ secrets.UPSTREAM_TOKEN || secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: https://data.forgejo.org/actions/checkout@v4
+        with:
+          token: ${{ env.TOKEN }}
+
+      - name: Install tools
+        run: |
+          missing=
+          command -v rsync >/dev/null || missing="$missing rsync"
+          command -v xz >/dev/null || missing="$missing xz-utils"
+          if [ -n "$missing" ]; then
+            sudo=; [ "$(id -u)" = 0 ] || sudo=sudo
+            $sudo apt-get update -qq && $sudo apt-get install -y -qq $missing
+          fi
+          if ! command -v pwsh >/dev/null; then
+            case "$(uname -m)" in aarch64|arm64) arch=arm64 ;; *) arch=x64 ;; esac
+            dir="$RUNNER_TEMP/pwsh"
+            mkdir -p "$dir"
+            curl --fail --location --silent --show-error \
+              "https://github.com/PowerShell/PowerShell/releases/download/v7.4.6/powershell-7.4.6-linux-$arch.tar.gz" \
+              | tar -xz -C "$dir"
+            chmod +x "$dir/pwsh"
+            echo "$dir" >> "$GITHUB_PATH"
+          fi
+
+      - id: repo
+        shell: pwsh
+        run: .github/scripts/Get-7ZipVersion.ps1 -Source Repo >> $env:GITHUB_OUTPUT
+
+      - id: upstream
+        shell: pwsh
+        run: .github/scripts/Get-7ZipVersion.ps1 -Source Upstream >> $env:GITHUB_OUTPUT
+
+      - id: check
+        env:
+          REPO_VERSION: ${{ steps.repo.outputs.version }}
+          UPSTREAM_VERSION: ${{ steps.upstream.outputs.version }}
+          BRANCH: upstream/7zip-${{ steps.upstream.outputs.short }}
+        run: |
+          newer=false
+          if [ "$(printf '%s\n%s\n' "$REPO_VERSION" "$UPSTREAM_VERSION" | sort -V | tail -n1)" = "$UPSTREAM_VERSION" ] \
+             && [ "$UPSTREAM_VERSION" != "$REPO_VERSION" ]; then
+            if git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null; then
+              echo "$BRANCH already exists; nothing to do."
+            else
+              newer=true
+            fi
+          fi
+          echo "newer=$newer" >> "$GITHUB_OUTPUT"
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+          echo "Source tree: 7-Zip $REPO_VERSION; download page: 7-Zip $UPSTREAM_VERSION; import: $newer"
+
+      - name: Import the upstream source
+        if: steps.check.outputs.newer == 'true'
+        env:
+          SRC_URL: ${{ steps.upstream.outputs.src_url }}
+          VERSION: ${{ steps.upstream.outputs.version }}
+          MAJOR: ${{ steps.upstream.outputs.major }}
+          MINOR: ${{ steps.upstream.outputs.minor }}
+        run: |
+          src="$RUNNER_TEMP/7zip-src"
+          mkdir -p "$src"
+          curl --fail --location --silent --show-error --output "$RUNNER_TEMP/src.tar.xz" "$SRC_URL"
+          tar -xJf "$RUNNER_TEMP/src.tar.xz" -C "$src"
+          # the tarball must hold the version it claims to be
+          grep -Eq "#define MY_VER_MAJOR $MAJOR\b" "$src/C/7zVersion.h"
+          grep -Eq "#define MY_VER_MINOR $MINOR\b" "$src/C/7zVersion.h"
+          for dir in Asm C CPP DOC; do
+            test -d "$src/$dir"
+            rsync -a --delete --exclude=/Windows11/ "$src/$dir/" "$dir/"
+          done
+          git status --short | head -50
+
+      - name: Open the pull request
+        if: steps.check.outputs.newer == 'true'
+        env:
+          BRANCH: ${{ steps.check.outputs.branch }}
+          VERSION: ${{ steps.upstream.outputs.version }}
+          DATE: ${{ steps.upstream.outputs.date }}
+          SRC_URL: ${{ steps.upstream.outputs.src_url }}
+        run: |
+          api="$GITHUB_SERVER_URL/api/v1/repos/$GITHUB_REPOSITORY"
+          # Forgejo's schedule event payload isn't guaranteed to carry the repository, so ask the API
+          export BASE=$(curl --fail-with-body --silent --show-error --header "Authorization: token $TOKEN" "$api" \
+            | node -e 'let s = ""; process.stdin.on("data", d => s += d).on("end", () => console.log(JSON.parse(s).default_branch))')
+          git config user.name 'forgejo-actions'
+          git config user.email "forgejo-actions@noreply.${GITHUB_SERVER_URL#*://}"
+          git switch -c "$BRANCH"
+          git add -A Asm C CPP DOC
+          git commit -m "Import 7-Zip $VERSION source" -m "From $SRC_URL ($DATE)."
+          git push origin "$BRANCH"
+          export PR_BODY="7-Zip $VERSION ($DATE) is out: [release](https://github.com/ip7z/7zip/releases/tag/$VERSION) · [what's new](https://www.7-zip.org/history.txt).
+
+          This imports \`$(basename "$SRC_URL")\` over \`Asm/\`, \`C/\`, \`CPP/\` and \`DOC/\`; \`CPP/Windows11\` is unchanged. The **Windows 11 release** workflow builds and tests it on this branch. Merging this pull request publishes 7-Zip $VERSION for Windows 11."
+          # node is on every runner (JavaScript actions need it), so use it for JSON
+          body=$(node -e '
+            const e = process.env;
+            process.stdout.write(JSON.stringify({
+              base: e.BASE, head: e.BRANCH, title: `Update to 7-Zip ${e.VERSION}`, body: e.PR_BODY,
+            }));')
+          curl --fail-with-body --silent --show-error --output /dev/null \
+            --header "Authorization: token $TOKEN" --header 'Content-Type: application/json' \
+            --data "$body" "$api/pulls"
+          # pushes made with the automatic token don't trigger workflows, so start the CI run explicitly
+          curl --fail-with-body --silent --show-error --output /dev/null \
+            --header "Authorization: token $TOKEN" --header 'Content-Type: application/json' \
+            --data "$(node -e 'process.stdout.write(JSON.stringify({ ref: process.env.BRANCH }))')" \
+            "$api/actions/workflows/windows11-release.yml/dispatches"
